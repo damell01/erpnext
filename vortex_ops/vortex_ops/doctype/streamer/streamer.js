@@ -39,6 +39,11 @@ frappe.ui.form.on("Streamer", {
                     _open_stock_receipt_dialog(frm);
                 }, "Inventory");
 
+                // ── Transfer from another warehouse ──────────────────────────
+                frm.add_custom_button("Transfer Stock In", () => {
+                    _open_transfer_dialog(frm);
+                }, "Inventory");
+
                 // ── View full inventory ──────────────────────────────────────
                 frm.add_custom_button("View Inventory", () =>
                     frappe.set_route("query-report", "Inventory by Streamer",
@@ -124,6 +129,74 @@ function _open_stock_receipt_dialog(frm) {
                     if (!r.exc) {
                         frappe.show_alert({
                             message: `Stock added. Entry: ${r.message}`,
+                            indicator: "green",
+                        });
+                        d.hide();
+                        frm.reload_doc();
+                    }
+                },
+            });
+        },
+    });
+    d.show();
+}
+
+
+function _open_transfer_dialog(frm) {
+    /*
+     * Transfer stock FROM another warehouse (e.g. Main Storage) INTO this
+     * streamer's warehouse. Uses ERPNext Material Transfer — no custom logic.
+     * Common workflow: bulk shipment arrives in Main Storage, then gets split
+     * to each streamer's personal warehouse.
+     */
+    const d = new frappe.ui.Dialog({
+        title: `Transfer Stock into ${frm.doc.streamer_name}`,
+        fields: [
+            {
+                fieldname:   "from_warehouse",
+                fieldtype:   "Link",
+                label:       "From Warehouse",
+                options:     "Warehouse",
+                reqd:        1,
+                description: "Where stock is coming from (e.g. Main Storage)",
+            },
+            {
+                fieldname:  "item_code",
+                fieldtype:  "Link",
+                label:      "Item",
+                options:    "Item",
+                reqd:       1,
+                filters:    { is_stock_item: 1, disabled: 0 },
+            },
+            {
+                fieldname:  "qty",
+                fieldtype:  "Float",
+                label:      "Quantity to Transfer",
+                reqd:       1,
+                default:    1,
+            },
+            {
+                fieldname:  "remarks",
+                fieldtype:  "Small Text",
+                label:      "Notes",
+                default:    `Transfer to ${frm.doc.streamer_name}`,
+            },
+        ],
+        primary_action_label: "Transfer",
+        primary_action(values) {
+            frappe.call({
+                method: "vortex_ops.setup.inventory_setup.transfer_stock",
+                args: {
+                    from_warehouse: values.from_warehouse,
+                    to_warehouse:   frm.doc.warehouse,
+                    item_code:      values.item_code,
+                    qty:            values.qty,
+                    remarks:        values.remarks,
+                },
+                callback(r) {
+                    if (!r.exc) {
+                        frappe.show_alert({
+                            message: `Transferred. Entry: ${r.message}`,
                             indicator: "green",
                         });
                         d.hide();
