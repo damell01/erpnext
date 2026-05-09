@@ -234,6 +234,40 @@ def setup_from_ui():
 
 
 @frappe.whitelist()
+def adjust_stock(warehouse, item_code, qty, adjustment_type="receipt", reason=""):
+    """
+    Adjust stock up (receipt) or down (issue) with a mandatory reason.
+    adjustment_type: 'receipt' = add qty | 'issue' = remove qty
+    Always creates a real Stock Entry so the audit trail is preserved.
+    """
+    company   = frappe.defaults.get_global_default("company")
+    entry_map = {"receipt": "Material Receipt", "issue": "Material Issue"}
+    se_type   = entry_map.get(adjustment_type, "Material Receipt")
+
+    se = frappe.new_doc("Stock Entry")
+    se.stock_entry_type = se_type
+    se.company          = company
+    se.remarks          = f"Manual adjustment — {reason}"
+
+    item_row = {
+        "item_code":  item_code,
+        "qty":        abs(float(qty)),
+        "basic_rate": 0,
+    }
+    if se_type == "Material Receipt":
+        item_row["t_warehouse"] = warehouse
+    else:
+        item_row["s_warehouse"] = warehouse
+
+    se.append("items", item_row)
+    se.insert(ignore_permissions=True)
+    se.submit()
+    frappe.db.commit()
+
+    return se.name
+
+
+@frappe.whitelist()
 def transfer_stock(from_warehouse, to_warehouse, item_code, qty, remarks=""):
     """
     Material Transfer between warehouses.

@@ -39,6 +39,11 @@ frappe.ui.form.on("Streamer", {
                     _open_stock_receipt_dialog(frm);
                 }, "Inventory");
 
+                // ── Adjust qty (correction / damage / found stock) ────────────
+                frm.add_custom_button("Adjust Stock", () => {
+                    _open_adjust_dialog(frm);
+                }, "Inventory");
+
                 // ── Transfer from another warehouse ──────────────────────────
                 frm.add_custom_button("Transfer Stock In", () => {
                     _open_transfer_dialog(frm);
@@ -129,6 +134,52 @@ function _open_stock_receipt_dialog(frm) {
                     if (!r.exc) {
                         frappe.show_alert({
                             message: `Stock added. Entry: ${r.message}`,
+                            indicator: "green",
+                        });
+                        d.hide();
+                        frm.reload_doc();
+                    }
+                },
+            });
+        },
+    });
+    d.show();
+}
+
+
+function _open_adjust_dialog(frm) {
+    const d = new frappe.ui.Dialog({
+        title: `Adjust Stock — ${frm.doc.streamer_name}`,
+        fields: [
+            {
+                fieldname: "item_code", fieldtype: "Link", label: "Item",
+                options: "Item", reqd: 1, filters: { is_stock_item: 1, disabled: 0 },
+            },
+            {
+                fieldname: "adjustment_type", fieldtype: "Select", label: "Adjustment Type",
+                options: "Add (received / found)\nRemove (damaged / lost / correction)",
+                reqd: 1, default: "Add (received / found)",
+            },
+            { fieldname: "qty",    fieldtype: "Float",      label: "Quantity", reqd: 1, default: 1 },
+            { fieldname: "reason", fieldtype: "Small Text", label: "Reason",   reqd: 1,
+              description: "Required — e.g. 'Damaged in transit', 'Recount correction'" },
+        ],
+        primary_action_label: "Apply Adjustment",
+        primary_action(values) {
+            const is_add = values.adjustment_type.startsWith("Add");
+            frappe.call({
+                method: "vortex_ops.setup.inventory_setup.adjust_stock",
+                args: {
+                    warehouse:       frm.doc.warehouse,
+                    item_code:       values.item_code,
+                    qty:             values.qty,
+                    adjustment_type: is_add ? "receipt" : "issue",
+                    reason:          values.reason,
+                },
+                callback(r) {
+                    if (!r.exc) {
+                        frappe.show_alert({
+                            message:   `Adjusted. Entry: ${r.message}`,
                             indicator: "green",
                         });
                         d.hide();
