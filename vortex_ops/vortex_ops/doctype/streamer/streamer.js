@@ -111,7 +111,7 @@ function _open_stock_receipt_dialog(frm) {
                 fieldname:  "remarks",
                 fieldtype:  "Small Text",
                 label:      "Notes",
-                default:    `Opening stock for ${frm.doc.streamer_name}`,
+                default:    `Stock received for ${frm.doc.streamer_name}`,
             },
         ],
         primary_action_label: "Add to Inventory",
@@ -158,7 +158,7 @@ function _open_transfer_dialog(frm) {
                 label:       "From Warehouse",
                 options:     "Warehouse",
                 reqd:        1,
-                description: "Where stock is coming from (e.g. Main Storage)",
+                description: "Where stock is coming from — another streamer's warehouse or any holding location",
             },
             {
                 fieldname:  "item_code",
