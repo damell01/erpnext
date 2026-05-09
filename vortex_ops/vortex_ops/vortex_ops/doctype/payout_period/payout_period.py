@@ -35,6 +35,63 @@ class PayoutPeriod(Document):
             self.total_tips  = safe_float(r[0].t)
 
     @frappe.whitelist()
+    def get_payout_summary(self):
+        """Return per-status counts and totals for the payouts in this period."""
+        payouts = frappe.get_all(
+            "Streamer Payout",
+            filters={"payout_period": self.name, "docstatus": ["!=", 2]},
+            fields=["status", "total_payout", "streamer"],
+        )
+        total_payout = round(sum(safe_float(p.total_payout) for p in payouts), 2)
+        by_status = {}
+        for p in payouts:
+            s = p.status or "Draft"
+            if s not in by_status:
+                by_status[s] = {"count": 0, "amount": 0.0}
+            by_status[s]["count"]  += 1
+            by_status[s]["amount"] = round(
+                by_status[s]["amount"] + safe_float(p.total_payout), 2
+            )
+
+        return {
+            "total":        len(payouts),
+            "total_payout": total_payout,
+            "by_status":    by_status,
+        }
+
+    @frappe.whitelist()
+    def approve_all_reviewed(self):
+        """Approve every Reviewed payout in this period and record loan deductions."""
+        reviewed = frappe.get_all(
+            "Streamer Payout",
+            filters={"payout_period": self.name, "status": "Reviewed", "docstatus": 1},
+            fields=["name", "streamer"],
+        )
+        if not reviewed:
+            frappe.msgprint("No Reviewed payouts to approve.", indicator="blue")
+            return []
+
+        approved = []
+        errors   = []
+        for r in reviewed:
+            try:
+                doc = frappe.get_doc("Streamer Payout", r.name)
+                doc.approve_payout()
+                approved.append(r.streamer)
+            except Exception as e:
+                frappe.log_error(f"approve_all_reviewed failed for {r.streamer}: {e}")
+                errors.append(r.streamer)
+
+        parts = []
+        if approved:
+            parts.append(f"Approved {len(approved)}: {', '.join(approved)}")
+        if errors:
+            parts.append(f"Failed {len(errors)}: {', '.join(errors)} — check Error Log")
+
+        frappe.msgprint("<br>".join(parts), indicator="green" if not errors else "orange")
+        return approved
+
+    @frappe.whitelist()
     def pull_streams(self):
         """Pull all submitted Stream Events in the date range for this business."""
         if not self.start_date or not self.end_date:
@@ -79,7 +136,6 @@ class PayoutPeriod(Document):
 
         ph = ",".join(["%s"] * len(stream_names))
 
-        # Collect all unique streamers
         streamers = set()
 
         for r in frappe.db.sql(

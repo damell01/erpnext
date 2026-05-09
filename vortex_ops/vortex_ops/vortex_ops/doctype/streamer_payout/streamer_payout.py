@@ -25,13 +25,14 @@ class StreamerPayout(Document):
         self.package_rate             = s.package_rate      or 0
         self.adp_employee_id          = s.adp_employee_id
         self.owner_platform_fee_pct   = s.owner_platform_fee_pct or 0
+        self.include_tips             = s.include_tips if hasattr(s, "include_tips") else 1
 
     def calc_all(self):
         gross   = safe_float(self.gross_sales)
         pct     = safe_float(self.profit_share_pct)
         pkgs    = safe_float(self.package_count)
         rate    = safe_float(self.package_rate)
-        tips    = safe_float(self.tips)
+        tips    = safe_float(self.tips) if self.include_tips else 0
         adj     = safe_float(self.adjustments)
         fee_pct = safe_float(self.owner_platform_fee_pct)
 
