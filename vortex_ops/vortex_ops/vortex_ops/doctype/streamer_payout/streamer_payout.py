@@ -75,10 +75,14 @@ class StreamerPayout(Document):
     @frappe.whitelist()
     def pull_stream_data(self):
         """
-        Pull gross sales, package count, and tips from all streams in the
-        payout period where this streamer was listed as primary or additional.
-        Handles multi-streamer shows correctly — only counts this streamer's
-        attributed data, not the full show total.
+        Pull gross sales, package count, and tips for this streamer from all
+        streams in the payout period.
+
+        For single-streamer shows the full show gross is attributed to the
+        primary streamer.  For multi-streamer shows, co-hosts/guests should
+        have their individual gross_sales entered on the Stream Streamer child
+        row — if set, that value is used instead of the show total, preventing
+        double-counting across streamers.
         """
         if not self.payout_period:
             frappe.throw("Set Payout Period first")
@@ -90,49 +94,67 @@ class StreamerPayout(Document):
 
         ph = ",".join(["%s"] * len(names))
 
-        # Gross sales from streams where this streamer was primary OR additional
-        r = frappe.db.sql(
+        # Shows where this streamer is the primary (use full show gross)
+        primary_r = frappe.db.sql(
             f"""
             SELECT
-                SUM(se.gross_sales)     g,
-                SUM(se.total_packages)  p,
-                SUM(se.tips)            t
+                COALESCE(SUM(se.gross_sales), 0)    g,
+                COALESCE(SUM(se.total_packages), 0) p,
+                COALESCE(SUM(se.tips), 0)           t
             FROM `tabStream Event` se
             WHERE se.name IN ({ph})
-              AND (
-                  se.primary_streamer = %s
-                  OR EXISTS (
-                      SELECT 1 FROM `tabStream Streamer` ss
-                      WHERE ss.parent = se.name AND ss.streamer = %s
-                  )
-              )
+              AND se.primary_streamer = %s
               AND se.docstatus = 1
             """,
-            (*names, self.streamer, self.streamer),
+            (*names, self.streamer),
             as_dict=True,
         )
 
-        # Also sum packages_sold from Stream Streamer child rows for this streamer
+        # Shows where this streamer is listed as additional
+        # Use their individual gross_sales from the child row if set,
+        # otherwise fall back to the full show gross (handles legacy data)
+        additional_r = frappe.db.sql(
+            f"""
+            SELECT
+                COALESCE(
+                    NULLIF(ss.gross_sales, 0),
+                    se.gross_sales
+                )                                   g,
+                COALESCE(ss.packages_sold, 0)       p,
+                se.tips                             t
+            FROM `tabStream Streamer` ss
+            JOIN `tabStream Event` se ON se.name = ss.parent
+            WHERE ss.parent IN ({ph})
+              AND ss.streamer = %s
+              AND se.docstatus = 1
+            """,
+            (*names, self.streamer),
+            as_dict=True,
+        )
+
+        total_gross = safe_float(primary_r[0].g if primary_r else 0)
+        total_pkgs  = int(primary_r[0].p if primary_r else 0)
+        total_tips  = safe_float(primary_r[0].t if primary_r else 0)
+
+        for row in additional_r:
+            total_gross += safe_float(row.g)
+            total_pkgs  += int(row.p or 0)
+            total_tips  += safe_float(row.t)
+
+        # Package count from child rows takes priority over show-level total
         pkg_override = frappe.db.sql(
             f"""
             SELECT COALESCE(SUM(ss.packages_sold), 0) pkg
             FROM `tabStream Streamer` ss
-            WHERE ss.parent IN ({ph})
-              AND ss.streamer = %s
+            WHERE ss.parent IN ({ph}) AND ss.streamer = %s
             """,
             (*names, self.streamer),
             as_dict=True,
         )
         override_pkgs = int(pkg_override[0].pkg if pkg_override else 0)
 
-        if r and r[0].g is not None:
-            self.gross_sales   = safe_float(r[0].g)
-            self.package_count = override_pkgs if override_pkgs > 0 else int(r[0].p or 0)
-            self.tips          = safe_float(r[0].t)
-            self.save()
-            frappe.msgprint("Stream data pulled successfully.", indicator="green")
-        else:
-            frappe.msgprint(
-                "No stream data found for this streamer in the selected period.",
-                indicator="orange",
-            )
+        self.gross_sales   = round(total_gross, 2)
+        self.package_count = override_pkgs if override_pkgs > 0 else total_pkgs
+        self.tips          = round(total_tips, 2)
+        self.save()
+        frappe.msgprint("Stream data pulled successfully.", indicator="green")

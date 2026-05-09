@@ -12,6 +12,7 @@
   "start_time",
   "end_time",
   "channel",
+  "company",
   "primary_streamer",
   "additional_streamers",
   "financials_section",
@@ -45,7 +46,7 @@
    "reqd": 1,
    "bold": 1,
    "in_list_view": 1,
-   "description": "The Whatnot show title — used to identify streamers involved"
+   "description": "The Whatnot show title \u2014 used to identify streamers involved"
   },
   {
    "fieldname": "stream_date",
@@ -74,6 +75,14 @@
    "in_list_view": 1
   },
   {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Business",
+   "options": "Company",
+   "in_list_view": 1,
+   "description": "Auto-filled from the Whatnot Channel's business"
+  },
+  {
    "fieldname": "primary_streamer",
    "fieldtype": "Link",
    "label": "Primary Streamer",
@@ -97,7 +106,7 @@
    "fieldname": "gross_sales",
    "fieldtype": "Currency",
    "label": "Gross Sales",
-   "description": "Total Whatnot sales before fees — from Whatnot show recap"
+   "description": "Total Whatnot sales before fees \u2014 from Whatnot show recap"
   },
   {
    "fieldname": "platform_fees",
