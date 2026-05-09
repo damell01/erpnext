@@ -11,6 +11,8 @@ def execute(filters=None):
         if s.warehouse
     }
 
+    has_flag = frappe.db.exists("Custom Field", "Warehouse-is_vortex_managed")
+
     cond = [
         "i.disabled = 0",
         "i.is_stock_item = 1",
@@ -18,6 +20,8 @@ def execute(filters=None):
         "w.is_group = 0",
         "w.disabled = 0",
     ]
+    if has_flag:
+        cond.append("w.is_vortex_managed = 1")
     vals = [company]
 
     if not f.get("include_zero_stock"):

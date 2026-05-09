@@ -1,4 +1,4 @@
-// Module-level state so action callbacks can refresh without re-building the page
+// Module-level state — lets action callbacks refresh without rebuilding the page
 let _state = null;
 
 frappe.pages["vortex-inventory"].on_page_load = function (wrapper) {
@@ -10,73 +10,109 @@ frappe.pages["vortex-inventory"].on_page_load = function (wrapper) {
 
     page.add_menu_item("Full Inventory Report", () =>
         frappe.set_route("query-report", "Inventory by Streamer"));
-
     page.add_menu_item("Stock Ledger (ERPNext)", () =>
         frappe.set_route("query-report", "Stock Ledger"));
 
+    page.add_inner_button("+ New Item",     () => _vortex_create_item());
     page.add_inner_button("+ New Location", () => _create_location_dialog());
     page.add_inner_button("↺ Refresh",      () => _load());
 
     const $body = $(`
         <div class="vortex-inv-page" style="padding:20px;">
-            <div class="vortex-inv-summary" style="margin-bottom:24px;"></div>
+            <div class="vortex-inv-summary" style="margin-bottom:20px;"></div>
+            <div class="vortex-inv-search" style="margin-bottom:16px;"></div>
             <div class="vortex-inv-grid"></div>
         </div>
     `).appendTo($(wrapper).find(".page-content"));
 
-    _state = { page, $body };
+    _state = { page, $body, locs: [] };
     _load();
 };
 
 
 function _load() {
     if (!_state) return;
-    const { $body } = _state;
-    $body.find(".vortex-inv-grid").html(
+    _state.$body.find(".vortex-inv-grid").html(
         `<div style="text-align:center;padding:40px;color:#9ca3af;">Loading…</div>`
     );
     frappe.call({
         method: "vortex_ops.vortex_ops.page.vortex_inventory.vortex_inventory.get_page_data",
         callback(r) {
-            const locs = r.message || [];
-            _render_summary($body.find(".vortex-inv-summary"), locs);
-            _render_grid($body.find(".vortex-inv-grid"), locs);
+            _state.locs = r.message || [];
+            _render_summary(_state.locs);
+            _render_search();
+            _render_grid(_state.locs);
         },
     });
 }
 
 
-function _render_summary($el, locs) {
-    const total_value = locs.reduce((s, l) => s + (l.total_value || 0), 0);
-    const total_skus  = locs.reduce((s, l) => s + (l.sku_count  || 0), 0);
+function _render_summary(locs) {
+    const $el        = _state.$body.find(".vortex-inv-summary");
+    const total_value = locs.reduce((s, l) => s + (l.total_value     || 0), 0);
+    const total_skus  = locs.reduce((s, l) => s + (l.sku_count       || 0), 0);
+    const low_total   = locs.reduce((s, l) => s + (l.low_stock_count || 0), 0);
 
     $el.html(`
-        <div style="display:flex; gap:20px; flex-wrap:wrap;">
-            ${_kpi("Locations",        locs.length,          "")}
-            ${_kpi("Total SKUs",       total_skus,            "")}
-            ${_kpi("Total Stock Value",_money(total_value),   "")}
+        <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:stretch;">
+            ${_kpi("Locations",        locs.length)}
+            ${_kpi("Total SKUs",       total_skus)}
+            ${_kpi("Total Stock Value",_money(total_value))}
+            ${low_total > 0
+                ? _kpi_warn("Low Stock Items", low_total)
+                : _kpi("Low Stock Items", 0)}
         </div>
     `);
 }
 
 
-function _render_grid($el, locs) {
+function _render_search() {
+    const $el = _state.$body.find(".vortex-inv-search");
+    if (_state.locs.length < 5) { $el.empty(); return; }
+    $el.html(`
+        <input type="text" placeholder="Search locations…"
+               style="width:260px; padding:6px 10px; border:1px solid #d1d5db;
+                      border-radius:6px; font-size:13px;">
+    `);
+    $el.find("input").on("input", function () {
+        const q = this.value.toLowerCase().trim();
+        const filtered = q
+            ? _state.locs.filter(l =>
+                l.label.toLowerCase().includes(q) ||
+                l.warehouse.toLowerCase().includes(q))
+            : _state.locs;
+        _render_grid(filtered);
+    });
+}
+
+
+function _render_grid(locs) {
+    const $el = _state.$body.find(".vortex-inv-grid");
     if (!locs.length) {
         $el.html(`
             <div style="text-align:center; padding:60px; color:#6b7280;">
-                <p style="font-size:16px;">No inventory locations yet.</p>
-                <p>Create a Streamer and generate their warehouse, or add a standalone location above.</p>
+                <p style="font-size:16px; margin-bottom:8px;">No inventory locations yet.</p>
+                <p>Create a Streamer and click "Create Warehouse", or use "+ New Location" above.</p>
             </div>
         `);
         return;
     }
 
     const cards = locs.map(loc => {
-        const hasStock = loc.sku_count > 0;
-        const border   = hasStock ? "#E8630A" : "#e5e7eb";
+        const hasStock   = loc.sku_count > 0;
+        const hasLow     = loc.low_stock_count > 0;
+        const border     = hasLow ? "#E8630A" : (hasStock ? "#1B2A4A" : "#e5e7eb");
         const isStreamer = loc.label !== loc.warehouse;
-        const wSafe    = _esc(loc.warehouse);
-        const lSafe    = _esc(loc.label);
+        const wSafe      = _esc(loc.warehouse);
+        const lSafe      = _esc(loc.label);
+
+        const lowBadge = hasLow
+            ? `<span style="font-size:10px; background:#fff7ed; color:#E8630A;
+                            border:1px solid #E8630A; padding:1px 6px;
+                            border-radius:4px; margin-left:6px;">
+                   ⚠ ${loc.low_stock_count} low
+               </span>`
+            : "";
 
         return `
             <div style="border:1px solid ${border}; border-radius:8px;
@@ -84,23 +120,26 @@ function _render_grid($el, locs) {
                         flex-direction:column; justify-content:space-between;">
 
                 <div style="display:flex; justify-content:space-between;
-                            align-items:flex-start; margin-bottom:8px;">
+                            align-items:flex-start; margin-bottom:10px;">
                     <div style="cursor:pointer; flex:1;"
                          onclick="frappe.set_route('query-report','Inventory by Streamer',
                                   {warehouse:'${wSafe}'})">
-                        <div style="font-weight:600; font-size:14px;">${lSafe}</div>
+                        <div style="font-weight:600; font-size:14px; display:flex;
+                                    align-items:center; flex-wrap:wrap; gap:4px;">
+                            ${lSafe}${lowBadge}
+                        </div>
                         ${isStreamer
-                            ? `<div style="font-size:11px;color:#6b7280;">${wSafe}</div>`
+                            ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;">${wSafe}</div>`
                             : ""}
                     </div>
-                    <span style="font-size:10px; background:#f3f4f6;
-                                 padding:2px 8px; border-radius:4px; color:#374151;
-                                 white-space:nowrap; margin-left:8px;">
+                    <span style="font-size:10px; background:#f3f4f6; padding:2px 8px;
+                                 border-radius:4px; color:#374151; white-space:nowrap;
+                                 margin-left:8px; flex-shrink:0;">
                         ${loc.wh_type || "Stores"}
                     </span>
                 </div>
 
-                <div style="display:flex; gap:20px; margin:8px 0 12px;">
+                <div style="display:flex; gap:24px; margin-bottom:12px;">
                     <div>
                         <div style="font-size:22px; font-weight:700; color:#E8630A;">
                             ${loc.sku_count || 0}
@@ -149,6 +188,8 @@ function _render_grid($el, locs) {
 }
 
 
+// ── New Location dialog ────────────────────────────────────────────────────────
+
 function _create_location_dialog() {
     const d = new frappe.ui.Dialog({
         title: "New Inventory Location",
@@ -172,10 +213,7 @@ function _create_location_dialog() {
         primary_action(values) {
             frappe.call({
                 method: "vortex_ops.setup.inventory_setup.create_inventory_location",
-                args: {
-                    location_name:  values.location_name,
-                    warehouse_type: values.warehouse_type,
-                },
+                args:   { location_name: values.location_name, warehouse_type: values.warehouse_type },
                 callback(r) {
                     if (!r.exc) {
                         frappe.show_alert({ message: `Created: ${r.message}`, indicator: "green" });
@@ -190,15 +228,23 @@ function _create_location_dialog() {
 }
 
 
-// ── KPI / formatting helpers ───────────────────────────────────────────────────
+// ── KPI helpers ───────────────────────────────────────────────────────────────
 
 function _kpi(label, value) {
     return `
-        <div style="background:#f9fafb; border-radius:8px; padding:16px 24px; min-width:140px;">
-            <div style="font-size:24px; font-weight:700; color:#1B2A4A;">${value}</div>
+        <div style="background:#f9fafb; border-radius:8px; padding:14px 20px; min-width:130px;">
+            <div style="font-size:22px; font-weight:700; color:#1B2A4A;">${value}</div>
             <div style="font-size:12px; color:#6b7280; margin-top:2px;">${label}</div>
-        </div>
-    `;
+        </div>`;
+}
+
+function _kpi_warn(label, value) {
+    return `
+        <div style="background:#fff7ed; border:1px solid #E8630A; border-radius:8px;
+                    padding:14px 20px; min-width:130px;">
+            <div style="font-size:22px; font-weight:700; color:#E8630A;">${value}</div>
+            <div style="font-size:12px; color:#E8630A; margin-top:2px;">${label}</div>
+        </div>`;
 }
 
 function _money(val) {
@@ -208,25 +254,120 @@ function _money(val) {
 }
 
 function _esc(str) {
-    return (str || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+    return (str || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
 }
 
 
 // ── Global action handlers (called from inline onclick on cards) ───────────────
+
+window._vortex_create_item = function () {
+    const d = new frappe.ui.Dialog({
+        title: "New Inventory Item",
+        fields: [
+            {
+                fieldname:   "item_name",
+                fieldtype:   "Data",
+                label:       "Item Name",
+                reqd:        1,
+                description: "e.g. "2024 Topps Chrome Baseball Hobby Box" — also becomes the item code",
+            },
+            {
+                fieldname: "item_group",
+                fieldtype: "Link",
+                label:     "Category",
+                options:   "Item Group",
+                default:   "Break Products",
+                reqd:      1,
+            },
+            {
+                fieldname: "uom",
+                fieldtype: "Select",
+                label:     "Unit",
+                options:   "Nos\nBox\nCase\nPack\nLot\nCard",
+                default:   "Nos",
+            },
+            {
+                fieldname:   "reorder_level",
+                fieldtype:   "Float",
+                label:       "Reorder Alert At",
+                default:     0,
+                description: "Get a low-stock warning when qty drops to this number (0 = no alert)",
+            },
+        ],
+        primary_action_label: "Create Item",
+        primary_action(v) {
+            frappe.call({
+                method:   "vortex_ops.setup.inventory_setup.create_inventory_item",
+                args: {
+                    item_name:     v.item_name,
+                    item_group:    v.item_group,
+                    uom:           v.uom,
+                    reorder_level: v.reorder_level || 0,
+                },
+                callback(r) {
+                    if (!r.exc) {
+                        frappe.show_alert({
+                            message:   `Item created: ${r.message}`,
+                            indicator: "green",
+                        });
+                        d.hide();
+                    }
+                },
+            });
+        },
+    });
+    d.show();
+};
+
 
 window._vortex_add_stock = function (warehouse, label) {
     const d = new frappe.ui.Dialog({
         title:  `Add Stock — ${label}`,
         fields: [
             {
-                fieldname: "item_code", fieldtype: "Link", label: "Item",
-                options: "Item", reqd: 1, filters: { is_stock_item: 1, disabled: 0 },
+                fieldname: "item_code",
+                fieldtype: "Link",
+                label:     "Item",
+                options:   "Item",
+                reqd:      1,
+                filters:   { is_stock_item: 1, disabled: 0 },
+                onchange() {
+                    const item = d.get_value("item_code");
+                    if (!item) { d.set_value("current_qty", 0); return; }
+                    frappe.call({
+                        method:   "vortex_ops.setup.inventory_setup.get_bin_qty",
+                        args:     { warehouse, item_code: item },
+                        callback(r) {
+                            d.set_value("current_qty", r.message ? r.message.actual_qty : 0);
+                        },
+                    });
+                },
             },
-            { fieldname: "qty",        fieldtype: "Float",    label: "Quantity",          reqd: 1, default: 1 },
-            { fieldname: "basic_rate", fieldtype: "Currency", label: "Cost per Unit ($)",
-              description: "Your purchase cost — used for COGS and profit calculations" },
-            { fieldname: "remarks",    fieldtype: "Small Text", label: "Notes",
-              default: `Stock received into ${label}` },
+            {
+                fieldname: "current_qty",
+                fieldtype: "Float",
+                label:     "Already in Stock",
+                read_only: 1,
+            },
+            {
+                fieldname: "qty",
+                fieldtype: "Float",
+                label:     "Quantity to Add",
+                reqd:      1,
+                default:   1,
+            },
+            {
+                fieldname:   "basic_rate",
+                fieldtype:   "Currency",
+                label:       "Cost per Unit ($)",
+                description: "Your purchase cost — used for COGS and profit calculations",
+            },
+            {
+                fieldname: "remarks",
+                fieldtype: "Small Text",
+                label:     "Notes",
+                default:   `Stock received into ${label}`,
+            },
         ],
         primary_action_label: "Add to Inventory",
         primary_action(v) {
@@ -261,12 +402,26 @@ window._vortex_transfer_stock = function (to_warehouse, label) {
                 description: "Where stock is coming from",
             },
             {
-                fieldname: "item_code", fieldtype: "Link", label: "Item",
-                options: "Item", reqd: 1, filters: { is_stock_item: 1, disabled: 0 },
+                fieldname: "item_code",
+                fieldtype: "Link",
+                label:     "Item",
+                options:   "Item",
+                reqd:      1,
+                filters:   { is_stock_item: 1, disabled: 0 },
             },
-            { fieldname: "qty",     fieldtype: "Float",     label: "Quantity to Transfer", reqd: 1, default: 1 },
-            { fieldname: "remarks", fieldtype: "Small Text", label: "Notes",
-              default: `Transfer into ${label}` },
+            {
+                fieldname: "qty",
+                fieldtype: "Float",
+                label:     "Quantity to Transfer",
+                reqd:      1,
+                default:   1,
+            },
+            {
+                fieldname: "remarks",
+                fieldtype: "Small Text",
+                label:     "Notes",
+                default:   `Transfer into ${label}`,
+            },
         ],
         primary_action_label: "Transfer",
         primary_action(v) {
@@ -274,7 +429,7 @@ window._vortex_transfer_stock = function (to_warehouse, label) {
                 method: "vortex_ops.setup.inventory_setup.transfer_stock",
                 args: {
                     from_warehouse: v.from_warehouse,
-                    to_warehouse:   to_warehouse,
+                    to_warehouse,
                     item_code:      v.item_code,
                     qty:            v.qty,
                     remarks:        v.remarks,
@@ -298,13 +453,37 @@ window._vortex_adjust_stock = function (warehouse, label) {
         title:  `Adjust Stock — ${label}`,
         fields: [
             {
-                fieldname: "item_code", fieldtype: "Link", label: "Item",
-                options: "Item", reqd: 1, filters: { is_stock_item: 1, disabled: 0 },
+                fieldname: "item_code",
+                fieldtype: "Link",
+                label:     "Item",
+                options:   "Item",
+                reqd:      1,
+                filters:   { is_stock_item: 1, disabled: 0 },
+                onchange() {
+                    const item = d.get_value("item_code");
+                    if (!item) { d.set_value("current_qty", 0); return; }
+                    frappe.call({
+                        method:   "vortex_ops.setup.inventory_setup.get_bin_qty",
+                        args:     { warehouse, item_code: item },
+                        callback(r) {
+                            d.set_value("current_qty", r.message ? r.message.actual_qty : 0);
+                        },
+                    });
+                },
             },
             {
-                fieldname: "adjustment_type", fieldtype: "Select", label: "Adjustment Type",
-                options: "Add (received / found)\nRemove (damaged / lost / correction)",
-                reqd: 1, default: "Add (received / found)",
+                fieldname: "current_qty",
+                fieldtype: "Float",
+                label:     "Currently in Stock",
+                read_only: 1,
+            },
+            {
+                fieldname: "adjustment_type",
+                fieldtype: "Select",
+                label:     "Adjustment Type",
+                options:   "Add (received / found)\nRemove (damaged / lost / correction)",
+                reqd:      1,
+                default:   "Add (received / found)",
             },
             { fieldname: "qty",    fieldtype: "Float",      label: "Quantity", reqd: 1, default: 1 },
             { fieldname: "reason", fieldtype: "Small Text", label: "Reason",   reqd: 1,
