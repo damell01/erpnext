@@ -46,4 +46,6 @@ fixtures = [
     {"dt": "Workspace",    "filters": [["name", "like", "Vortex%"]]},
     {"dt": "Print Format", "filters": [["module", "=", "Vortex Ops"]]},
     {"dt": "Report",       "filters": [["module", "=", "Vortex Ops"]]},
+    {"dt": "Custom Field", "filters": [["dt", "=", "Warehouse"],
+                                       ["fieldname", "=", "is_vortex_managed"]]},
 ]

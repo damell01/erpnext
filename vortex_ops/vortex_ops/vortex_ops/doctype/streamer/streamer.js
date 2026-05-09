@@ -83,40 +83,52 @@ frappe.ui.form.on("Streamer", {
 
 
 function _open_stock_receipt_dialog(frm) {
-    /*
-     * Opens a dialog that creates an ERPNext Stock Entry (Material Receipt)
-     * directly into this streamer's warehouse.
-     * ERPNext handles all the ledger entries — we just provide the UI shortcut.
-     */
     const d = new frappe.ui.Dialog({
         title: `Add Stock to ${frm.doc.streamer_name}`,
         fields: [
             {
-                fieldname:  "item_code",
-                fieldtype:  "Link",
-                label:      "Item",
-                options:    "Item",
-                reqd:       1,
-                filters:    { is_stock_item: 1, disabled: 0 },
+                fieldname: "item_code",
+                fieldtype: "Link",
+                label:     "Item",
+                options:   "Item",
+                reqd:      1,
+                filters:   { is_stock_item: 1, disabled: 0 },
+                onchange() {
+                    const item = d.get_value("item_code");
+                    if (!item || !frm.doc.warehouse) { d.set_value("current_qty", 0); return; }
+                    frappe.call({
+                        method:   "vortex_ops.setup.inventory_setup.get_bin_qty",
+                        args:     { warehouse: frm.doc.warehouse, item_code: item },
+                        callback(r) {
+                            d.set_value("current_qty", r.message ? r.message.actual_qty : 0);
+                        },
+                    });
+                },
             },
             {
-                fieldname:  "qty",
-                fieldtype:  "Float",
-                label:      "Quantity",
-                reqd:       1,
-                default:    1,
+                fieldname: "current_qty",
+                fieldtype: "Float",
+                label:     "Already in Stock",
+                read_only: 1,
             },
             {
-                fieldname:  "basic_rate",
-                fieldtype:  "Currency",
-                label:      "Cost per Unit ($)",
+                fieldname: "qty",
+                fieldtype: "Float",
+                label:     "Quantity to Add",
+                reqd:      1,
+                default:   1,
+            },
+            {
+                fieldname:   "basic_rate",
+                fieldtype:   "Currency",
+                label:       "Cost per Unit ($)",
                 description: "Your cost — used for COGS and profit calculations",
             },
             {
-                fieldname:  "remarks",
-                fieldtype:  "Small Text",
-                label:      "Notes",
-                default:    `Stock received for ${frm.doc.streamer_name}`,
+                fieldname: "remarks",
+                fieldtype: "Small Text",
+                label:     "Notes",
+                default:   `Stock received for ${frm.doc.streamer_name}`,
             },
         ],
         primary_action_label: "Add to Inventory",
@@ -152,13 +164,37 @@ function _open_adjust_dialog(frm) {
         title: `Adjust Stock — ${frm.doc.streamer_name}`,
         fields: [
             {
-                fieldname: "item_code", fieldtype: "Link", label: "Item",
-                options: "Item", reqd: 1, filters: { is_stock_item: 1, disabled: 0 },
+                fieldname: "item_code",
+                fieldtype: "Link",
+                label:     "Item",
+                options:   "Item",
+                reqd:      1,
+                filters:   { is_stock_item: 1, disabled: 0 },
+                onchange() {
+                    const item = d.get_value("item_code");
+                    if (!item || !frm.doc.warehouse) { d.set_value("current_qty", 0); return; }
+                    frappe.call({
+                        method:   "vortex_ops.setup.inventory_setup.get_bin_qty",
+                        args:     { warehouse: frm.doc.warehouse, item_code: item },
+                        callback(r) {
+                            d.set_value("current_qty", r.message ? r.message.actual_qty : 0);
+                        },
+                    });
+                },
             },
             {
-                fieldname: "adjustment_type", fieldtype: "Select", label: "Adjustment Type",
-                options: "Add (received / found)\nRemove (damaged / lost / correction)",
-                reqd: 1, default: "Add (received / found)",
+                fieldname: "current_qty",
+                fieldtype: "Float",
+                label:     "Currently in Stock",
+                read_only: 1,
+            },
+            {
+                fieldname: "adjustment_type",
+                fieldtype: "Select",
+                label:     "Adjustment Type",
+                options:   "Add (received / found)\nRemove (damaged / lost / correction)",
+                reqd:      1,
+                default:   "Add (received / found)",
             },
             { fieldname: "qty",    fieldtype: "Float",      label: "Quantity", reqd: 1, default: 1 },
             { fieldname: "reason", fieldtype: "Small Text", label: "Reason",   reqd: 1,
