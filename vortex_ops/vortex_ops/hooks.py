@@ -7,6 +7,19 @@ app_icon        = "fa fa-fire"
 app_color       = "#E8630A"
 app_license     = "proprietary"
 
+# ── White-label assets injected into every desk page ─────────────────────────
+app_include_css = ["/assets/vortex_ops/css/vortex_theme.css"]
+app_include_js  = ["/assets/vortex_ops/js/vortex_boot.js"]
+
+# ── Override boot data so the session carries Vortex branding ─────────────────
+boot_session = "vortex_ops.vortex_ops.boot.boot_session"
+
+# ── Login / web page branding ─────────────────────────────────────────────────
+website_context = {
+    "top_bar_items": [],
+    "app_name":      "Vortex Ops",
+}
+
 scheduler_events = {
     "hourly": [
         "vortex_ops.automation.daily_tasks.check_pending_uploads",

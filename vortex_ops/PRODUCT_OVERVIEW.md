@@ -2,7 +2,7 @@
 ### Product Overview & Roadmap
 
 **Prepared for:** Vortex Breaks  
-**Platform:** ERPNext v15 (Frappe Framework) — Custom App: `vortex_ops`  
+**Platform:** Vortex Ops  
 **Date:** May 2025  
 
 ---
@@ -30,7 +30,7 @@ Vortex Breaks is a sports card and trading card game (TCG) break business operat
 - Time spent reconciling data across multiple sheets
 - No audit trail for deductions, loans, or adjustments
 
-**The solution:** A centralized operations platform built on ERPNext that replaces every spreadsheet with a structured database, automates repetitive calculations, and provides a single source of truth for the entire operation — while keeping the workflows familiar and easy to use.
+**The solution:** A centralized operations platform — Vortex Ops — that replaces every spreadsheet with a structured database, automates repetitive calculations, and provides a single source of truth for the entire operation — while keeping the workflows familiar and easy to use.
 
 ---
 
@@ -209,7 +209,7 @@ TRACKING
 | ✅ | Feature |
 |---|---|
 | ✅ | Inventory page (card grid overview) |
-| ✅ | Per-streamer warehouses with ERPNext stock entries |
+| ✅ | Per-streamer warehouses with tracked stock entries |
 | ✅ | Add Stock, Remove, Transfer, Adjust from the UI |
 | ✅ | Product cost (valuation rate) per item |
 | ✅ | Low-stock reorder alerts |
@@ -334,7 +334,7 @@ Streamer, Legal Name, ADP ID, Payout Type, Gross Sales, Share %, Share $, Packag
                          │                          │
            ┌─────────────▼──────────┐  ┌────────────▼──────────────┐
            │   Material Issue       │  │    Streamer Payout          │
-           │ (ERPNext stock entry)  │  │  calc · approve · export   │
+           │  (auto stock entry)    │  │  calc · approve · export   │
            └─────────────┬──────────┘  └────────────┬──────────────┘
                          │                          │
            ┌─────────────▼──────────┐  ┌────────────▼──────────────┐
@@ -345,7 +345,7 @@ Streamer, Legal Name, ADP ID, Payout Type, Gross Sales, Share %, Share $, Packag
 
 ### Two-Business Setup
 
-Both brands operate on the same ERPNext instance. Data is separated by:
+Both brands operate on the same Vortex Ops instance. Data is separated by:
 - **Company** field on Payout Period, Stream Event, and Whatnot Channel
 - Streams only appear in payroll for the correct business
 - Separate Whatnot Channels with separate login credentials
@@ -418,7 +418,7 @@ Give each streamer a limited login to ERPNext where they can:
 - Submit their post-show recap directly (replacing the paper form)
 
 **Full Accounting Integration**
-Connect the operational data to ERPNext's accounting module:
+Connect the operational data to the platform's accounting module:
 - Stream revenue → journal entries
 - Payroll → expense entries
 - Inventory → balance sheet updates
@@ -472,8 +472,8 @@ Q2 2026+ ───────────────────────�
 
 ## Key Decisions & Design Principles
 
-**Why ERPNext?**
-ERPNext provides a battle-tested inventory system (warehouses, stock entries, valuation), a solid permission model, and a web-based UI that works on any device. Building on top of it means we get audit trails, user management, and accounting integration for free — rather than reinventing them.
+**Why a structured platform instead of custom-built tools?**
+The platform provides a battle-tested inventory system (warehouses, stock entries, valuation), a solid permission model, and a web-based UI that works on any device. Building on it means audit trails, user management, and accounting integration are available out of the box — rather than reinventing them.
 
 **Why Ollama (local AI)?**
 All AI runs on the server — no data is sent to OpenAI or any cloud service. Product descriptions, sales amounts, and streamer data stay private. The model can be swapped out as better options become available without any code changes.
@@ -482,7 +482,7 @@ All AI runs on the server — no data is sent to OpenAI or any cloud service. Pr
 ADP handles tax calculations, direct deposit, and legal payroll compliance. This system prepares the numbers (calculates net payout per streamer) and exports them in a format ADP can consume. Replacing ADP would require building payroll tax logic for every state — not worth it.
 
 **Two businesses, one system**
-Running both brands on one ERPNext instance keeps infrastructure costs low and allows shared streamers. Every record is scoped to a Company (business), so data never crosses between the two brands.
+Running both brands on one Vortex Ops instance keeps infrastructure costs low and allows shared streamers. Every record is scoped to a Company (business), so data never crosses between the two brands.
 
 ---
 
@@ -494,8 +494,8 @@ Running both brands on one ERPNext instance keeps infrastructure costs low and a
 | **Payout Period** | A weekly (or monthly) pay cycle with a start/end date |
 | **Streamer Payout** | The calculated payout amount for one streamer in one period |
 | **Sales Upload** | Post-show record of what was sold — triggers inventory deduction |
-| **Material Issue** | ERPNext stock entry that reduces inventory (used for sales deductions) |
-| **Material Receipt** | ERPNext stock entry that increases inventory (used for receiving stock) |
+| **Material Issue** | System stock entry that reduces inventory (used for sales deductions) |
+| **Material Receipt** | System stock entry that increases inventory (used for receiving stock) |
 | **Valuation Rate** | The cost per unit of an item, used to calculate COGS |
 | **Owner Platform Fee** | Percentage the business owner takes from each streamer's gross sales |
 | **Profit Share** | Payout type: streamer earns X% of their net sales |
