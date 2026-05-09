@@ -11,16 +11,44 @@ def validate_doc(doc, method=None):
         doc.upload_date = today()
     if not doc.upload_status:
         doc.upload_status = "Pending"
+
+    # Auto-fill streamer from stream event's primary streamer if blank
+    if doc.stream_event and not doc.streamer:
+        doc.streamer = frappe.db.get_value(
+            "Stream Event", doc.stream_event, "primary_streamer"
+        )
+
+    # Auto-fill warehouse on each line from streamer if blank
+    if doc.streamer:
+        wh = frappe.db.get_value("Streamer", doc.streamer, "warehouse") or ""
+        for line in doc.sales_lines:
+            if not line.warehouse and wh:
+                line.warehouse = wh
+
     total   = len(doc.sales_lines)
     matched = sum(1 for l in doc.sales_lines if l.item_code)
     doc.total_lines     = total
     doc.matched_lines   = matched
     doc.unmatched_lines = total - matched
 
+    # Compute sale totals and COGS estimate
+    total_sale = 0.0
+    total_cogs = 0.0
+    for line in doc.sales_lines:
+        qty = safe_float(line.qty_sold)
+        total_sale += safe_float(line.sale_amount)
+        if line.item_code:
+            val_rate = safe_float(
+                frappe.db.get_value("Item", line.item_code, "valuation_rate") or 0
+            )
+            total_cogs += qty * val_rate
+    doc.total_sale_amount  = round(total_sale, 2)
+    doc.total_cogs_estimate = round(total_cogs, 2)
+
 
 def on_submit(doc, method=None):
     if doc.upload_status != "Approved":
-        frappe.throw("Upload must be Approved before submitting")
+        frappe.throw("Upload must be Approved before submitting.")
     _deduct_inventory(doc)
 
 
