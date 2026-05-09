@@ -4,7 +4,9 @@ from vortex_ops.utils import safe_float
 
 
 def validate_doc(doc, method=None):
-    doc.pull_settings()
+    # Only pull settings when first creating — avoids clobbering manual rate edits on every save
+    if doc.is_new() or not doc.payout_type:
+        doc.pull_settings()
     doc.calc_all()
 
 
@@ -25,12 +27,12 @@ class StreamerPayout(Document):
         self.owner_platform_fee_pct   = s.owner_platform_fee_pct or 0
 
     def calc_all(self):
-        gross = safe_float(self.gross_sales)
-        pct   = safe_float(self.profit_share_pct)
-        pkgs  = safe_float(self.package_count)
-        rate  = safe_float(self.package_rate)
-        tips  = safe_float(self.tips)
-        adj   = safe_float(self.adjustments)
+        gross   = safe_float(self.gross_sales)
+        pct     = safe_float(self.profit_share_pct)
+        pkgs    = safe_float(self.package_count)
+        rate    = safe_float(self.package_rate)
+        tips    = safe_float(self.tips)
+        adj     = safe_float(self.adjustments)
         fee_pct = safe_float(self.owner_platform_fee_pct)
 
         self.profit_share_amount = (
@@ -58,19 +60,61 @@ class StreamerPayout(Document):
             )
 
     def _get_loans(self):
+        """
+        Sum all Scheduled repayments from Active Loan Records for this streamer.
+        Picks up rows explicitly assigned to this payout period plus unassigned rows
+        (payout_period blank), so the schedule works whether or not periods are
+        pre-filled on each repayment row.
+        """
+        if not self.streamer or not self.payout_period:
+            return 0.0
+
         r = frappe.db.sql(
             """
-            SELECT COALESCE(SUM(repayment_amount), 0) AS t
-            FROM `tabLoan Repayment`
-            WHERE streamer = %s
-              AND payout_period = %s
-              AND status = 'Scheduled'
-              AND docstatus = 1
+            SELECT COALESCE(SUM(lr.repayment_amount), 0) AS t
+            FROM `tabLoan Repayment` lr
+            JOIN `tabLoan Record` rec ON rec.name = lr.parent
+            WHERE rec.streamer   = %s
+              AND rec.docstatus  = 1
+              AND rec.status     = 'Active'
+              AND lr.status      = 'Scheduled'
+              AND (lr.payout_period = %s OR lr.payout_period IS NULL OR lr.payout_period = '')
             """,
             (self.streamer, self.payout_period),
             as_dict=True,
         )
         return safe_float(r[0].t if r else 0)
+
+    @frappe.whitelist()
+    def approve_payout(self):
+        """
+        Advance status from Reviewed → Approved and mark matching loan
+        repayment rows as Deducted so the loan balance updates.
+        """
+        if self.status != "Reviewed":
+            frappe.throw("Only Reviewed payouts can be approved.")
+
+        if self.loan_deductions and self.payout_period:
+            loan_records = frappe.get_all(
+                "Loan Record",
+                filters={"streamer": self.streamer, "docstatus": 1, "status": "Active"},
+                fields=["name"],
+            )
+            for lr_meta in loan_records:
+                lr_doc = frappe.get_doc("Loan Record", lr_meta.name)
+                changed = False
+                for row in lr_doc.repayments:
+                    if row.status == "Scheduled" and (
+                        not row.payout_period or row.payout_period == self.payout_period
+                    ):
+                        row.status         = "Deducted"
+                        row.payout_period  = self.payout_period
+                        changed = True
+                if changed:
+                    lr_doc.save(ignore_permissions=True)
+
+        self.db_set("status", "Approved")
+        frappe.msgprint("Payout approved. Loan deductions recorded.", indicator="green")
 
     @frappe.whitelist()
     def pull_stream_data(self):

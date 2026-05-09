@@ -8,9 +8,10 @@ def execute(filters=None):
     if not period:
         return _columns(), []
 
-    docstatus_filter = ["!=", 2]
-    if not f.get("include_draft"):
-        docstatus_filter = [">=", 0]
+    if f.get("include_draft"):
+        docstatus_filter = ["!=", 2]   # submitted + draft, exclude cancelled
+    else:
+        docstatus_filter = ["=", 1]    # submitted only
 
     payouts = frappe.get_all(
         "Streamer Payout",
