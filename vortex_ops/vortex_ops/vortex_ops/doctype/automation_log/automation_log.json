@@ -1,0 +1,99 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2025-05-09 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "automation_type",
+  "related_doctype",
+  "related_name",
+  "status",
+  "run_at",
+  "run_by",
+  "input_summary",
+  "output_summary",
+  "error_message"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "ALOG-.YYYY.-.####"
+  },
+  {
+   "fieldname": "automation_type",
+   "fieldtype": "Select",
+   "label": "Automation Type",
+   "options": "\nAI Match\nAnomaly Detection\nAI Summary\nLow Stock\nMissing Report\nInventory Deduction\nDaily Tasks\nWeekly Tasks\nPending Upload Check",
+   "reqd": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "related_doctype",
+   "fieldtype": "Data",
+   "label": "Related DocType",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "related_name",
+   "fieldtype": "Data",
+   "label": "Related Name",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Success\nFailed\nPartial\nSkipped",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "run_at",
+   "fieldtype": "Datetime",
+   "label": "Run At",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "run_by",
+   "fieldtype": "Link",
+   "label": "Run By",
+   "options": "User"
+  },
+  {
+   "fieldname": "input_summary",
+   "fieldtype": "Text",
+   "label": "Input Summary",
+   "description": "What was sent to Ollama or triggered the automation"
+  },
+  {
+   "fieldname": "output_summary",
+   "fieldtype": "Text",
+   "label": "Output Summary",
+   "description": "What the automation returned"
+  },
+  {
+   "fieldname": "error_message",
+   "fieldtype": "Text",
+   "label": "Error Message",
+   "description": "Populated when status = Failed"
+  }
+ ],
+ "links": [],
+ "modified": "2025-05-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Vortex Ops",
+ "name": "Automation Log",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "run_at",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

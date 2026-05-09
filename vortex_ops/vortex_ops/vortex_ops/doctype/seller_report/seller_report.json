@@ -1,0 +1,118 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2025-05-09 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "is_submittable": 1,
+ "field_order": [
+  "naming_series",
+  "stream_event",
+  "streamer",
+  "report_date",
+  "packages_sold",
+  "tips",
+  "adjustments",
+  "adjustment_reason",
+  "status",
+  "submitted_by",
+  "notes",
+  "attachments"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "SR-.YYYY.-.####"
+  },
+  {
+   "fieldname": "stream_event",
+   "fieldtype": "Link",
+   "label": "Stream Event",
+   "options": "Stream Event",
+   "reqd": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "streamer",
+   "fieldtype": "Link",
+   "label": "Streamer",
+   "options": "Streamer",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "report_date",
+   "fieldtype": "Date",
+   "label": "Report Date",
+   "reqd": 1,
+   "default": "Today"
+  },
+  {
+   "fieldname": "packages_sold",
+   "fieldtype": "Int",
+   "label": "Packages Sold",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "tips",
+   "fieldtype": "Currency",
+   "label": "Tips",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "adjustments",
+   "fieldtype": "Currency",
+   "label": "Adjustments",
+   "description": "Use negative values for deductions"
+  },
+  {
+   "fieldname": "adjustment_reason",
+   "fieldtype": "Small Text",
+   "label": "Adjustment Reason",
+   "description": "Required when Adjustments is non-zero"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nSubmitted\nReviewed",
+   "reqd": 1,
+   "default": "Draft",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "submitted_by",
+   "fieldtype": "Link",
+   "label": "Submitted By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "attachments",
+   "fieldtype": "Attach",
+   "label": "Attachments",
+   "description": "Photos, supporting docs, paper report scans"
+  }
+ ],
+ "links": [],
+ "modified": "2025-05-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Vortex Ops",
+ "name": "Seller Report",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "report_date",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
