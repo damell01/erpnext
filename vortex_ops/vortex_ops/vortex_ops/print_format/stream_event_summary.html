@@ -1,0 +1,62 @@
+<style>
+body { font-family: Arial, sans-serif; font-size: 12px; color: #1B2A4A; }
+.hdr { background: #1B2A4A; padding: 16px; color: #fff; margin-bottom: 14px; }
+.hdr h2 { color: #E8630A; margin: 0; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+th { background: #006B75; color: #fff; padding: 5px 8px; font-size: 11px; text-align: left; }
+td { padding: 4px 8px; border-bottom: 1px solid #E2E8F0; font-size: 11px; }
+.kpi { display: inline-block; margin: 0 16px; text-align: center; }
+.kpi .val { font-size: 20px; font-weight: bold; color: #E8630A; }
+.kpi .lbl { font-size: 9px; color: #6B7280; }
+</style>
+
+<div class="hdr">
+  <h2>{{ doc.stream_title }}</h2>
+  <p>{{ doc.stream_date }} &nbsp;|&nbsp; {{ doc.channel }} &nbsp;|&nbsp;
+    {{ doc.primary_streamer }}
+    {% if doc.additional_streamers %}
+      + {{ doc.additional_streamers | length }} co-host(s)
+    {% endif %}
+  </p>
+</div>
+
+<div style="margin-bottom: 16px;">
+  <div class="kpi">
+    <div class="val">{{ frappe.utils.fmt_money(doc.net_earned or 0) }}</div>
+    <div class="lbl">Net Earned</div>
+  </div>
+  <div class="kpi">
+    <div class="val">{{ doc.total_packages or 0 }}</div>
+    <div class="lbl">Packages</div>
+  </div>
+  <div class="kpi">
+    <div class="val">{{ frappe.utils.fmt_money(doc.tips or 0) }}</div>
+    <div class="lbl">Tips</div>
+  </div>
+  <div class="kpi">
+    <div class="val">{{ frappe.utils.fmt_money(doc.gross_profit or 0) }}</div>
+    <div class="lbl">Gross Profit</div>
+  </div>
+</div>
+
+<table>
+  <tr><th>Metric</th><th>Amount</th></tr>
+  <tr><td>Gross Sales</td>
+      <td>{{ frappe.utils.fmt_money(doc.gross_sales or 0) }}</td></tr>
+  <tr><td>Platform Fees</td>
+      <td>{{ frappe.utils.fmt_money(doc.platform_fees or 0) }}</td></tr>
+  <tr><td>Net Earned</td>
+      <td><b>{{ frappe.utils.fmt_money(doc.net_earned or 0) }}</b></td></tr>
+  <tr><td>COGS</td>
+      <td>{{ frappe.utils.fmt_money(doc.cogs or 0) }}</td></tr>
+  <tr><td>Gross Profit</td>
+      <td><b>{{ frappe.utils.fmt_money(doc.gross_profit or 0) }}</b></td></tr>
+</table>
+
+{% if doc.ai_summary %}
+<p><b>AI Summary:</b> {{ doc.ai_summary }}</p>
+{% endif %}
+
+{% if doc.notes %}
+<p><b>Notes:</b> {{ doc.notes }}</p>
+{% endif %}

@@ -1,0 +1,94 @@
+<style>
+body { font-family: Arial, sans-serif; font-size: 12px; color: #1B2A4A; }
+.hdr { background: #1B2A4A; color: #fff; padding: 20px; margin-bottom: 16px; }
+.hdr h1 { color: #E8630A; margin: 0; font-size: 22px; }
+.hdr p { margin: 3px 0; color: #A0B4CC; font-size: 11px; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+th { background: #1B2A4A; color: #fff; padding: 6px 8px; text-align: left; font-size: 11px; }
+td { padding: 5px 8px; border-bottom: 1px solid #E2E8F0; font-size: 11px; }
+.amt { text-align: right; }
+.total td { background: #EEF2F7; font-weight: bold; font-size: 13px; }
+.deduct td { color: #B91C1C; }
+footer { font-size: 9px; color: #6B7280; margin-top: 20px; text-align: center; }
+</style>
+
+<div class="hdr">
+  <h1>VORTEX BREAKS</h1>
+  <p>Payout Slip &nbsp;|&nbsp; Period: {{ doc.payout_period }}</p>
+</div>
+
+<table>
+  <tr>
+    <th>Streamer</th>
+    <td>{{ doc.streamer }}</td>
+    <th>Legal Name</th>
+    <td>{{ frappe.db.get_value("Streamer", doc.streamer, "legal_name") or "—" }}</td>
+  </tr>
+  <tr>
+    <th>ADP Employee ID</th>
+    <td>{{ doc.adp_employee_id or "—" }}</td>
+    <th>Payout Type</th>
+    <td>{{ doc.payout_type }}</td>
+  </tr>
+</table>
+
+<table>
+  <tr><th>Component</th><th class="amt">Amount</th></tr>
+
+  <tr>
+    <td>Gross Sales</td>
+    <td class="amt">{{ frappe.utils.fmt_money(doc.gross_sales or 0) }}</td>
+  </tr>
+
+  {% if doc.payout_type == "Profit Share" %}
+  <tr>
+    <td>Profit Share ({{ doc.profit_share_pct }}%)</td>
+    <td class="amt">{{ frappe.utils.fmt_money(doc.profit_share_amount or 0) }}</td>
+  </tr>
+  {% endif %}
+
+  {% if doc.package_count %}
+  <tr>
+    <td>Package Payout ({{ doc.package_count }} pkgs × ${{ doc.package_rate }})</td>
+    <td class="amt">{{ frappe.utils.fmt_money(doc.package_payout or 0) }}</td>
+  </tr>
+  {% endif %}
+
+  {% if doc.tips %}
+  <tr>
+    <td>Tips</td>
+    <td class="amt">{{ frappe.utils.fmt_money(doc.tips) }}</td>
+  </tr>
+  {% endif %}
+
+  {% if doc.adjustments %}
+  <tr>
+    <td>Adjustments</td>
+    <td class="amt">{{ frappe.utils.fmt_money(doc.adjustments) }}</td>
+  </tr>
+  {% endif %}
+
+  {% if doc.owner_platform_fee_amount %}
+  <tr class="deduct">
+    <td>Owner Platform Fee ({{ doc.owner_platform_fee_pct }}%)</td>
+    <td class="amt">- {{ frappe.utils.fmt_money(doc.owner_platform_fee_amount) }}</td>
+  </tr>
+  {% endif %}
+
+  {% if doc.loan_deductions %}
+  <tr class="deduct">
+    <td>Loan Deductions</td>
+    <td class="amt">- {{ frappe.utils.fmt_money(doc.loan_deductions) }}</td>
+  </tr>
+  {% endif %}
+
+  <tr class="total">
+    <td>TOTAL PAYOUT</td>
+    <td class="amt">{{ frappe.utils.fmt_money(doc.total_payout or 0) }}</td>
+  </tr>
+</table>
+
+<footer>
+  Generated {{ frappe.utils.now() }} &nbsp;|&nbsp;
+  Vortex Breaks LLC &nbsp;|&nbsp; Confidential — Not a payroll document
+</footer>
