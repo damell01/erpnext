@@ -71,12 +71,12 @@ function _render_grid($el, locs) {
 
         return `
             <div style="border:1px solid ${border}; border-radius:8px;
-                        padding:16px; background:#fff; cursor:pointer;"
-                 onclick="frappe.set_route('query-report','Inventory by Streamer',
-                          {warehouse:'${loc.warehouse}'})">
+                        padding:16px; background:#fff;">
                 <div style="display:flex; justify-content:space-between;
                              align-items:flex-start; margin-bottom:8px;">
-                    <div>
+                    <div style="cursor:pointer; flex:1;"
+                         onclick="frappe.set_route('query-report','Inventory by Streamer',
+                                  {warehouse:'${loc.warehouse}'})">
                         <div style="font-weight:600; font-size:14px;">
                             ${frappe.utils.escape_html(loc.label)}
                         </div>
@@ -89,7 +89,7 @@ function _render_grid($el, locs) {
                         ${loc.wh_type || "Stores"}
                     </span>
                 </div>
-                <div style="display:flex; gap:16px; margin-top:8px;">
+                <div style="display:flex; gap:16px; margin-top:8px; margin-bottom:12px;">
                     <div>
                         <div style="font-size:20px; font-weight:700; color:#E8630A;">
                             ${loc.sku_count || 0}
@@ -102,6 +102,21 @@ function _render_grid($el, locs) {
                         </div>
                         <div style="font-size:11px; color:#6b7280;">Stock Value</div>
                     </div>
+                </div>
+                <div style="display:flex; gap:6px; border-top:1px solid #f3f4f6;
+                             padding-top:10px;">
+                    <button class="btn btn-xs btn-default"
+                            onclick="_vortex_add_stock('${loc.warehouse}', '${frappe.utils.escape_html(loc.label)}')">
+                        + Add Stock
+                    </button>
+                    <button class="btn btn-xs btn-default"
+                            onclick="_vortex_adjust_stock('${loc.warehouse}', '${frappe.utils.escape_html(loc.label)}')">
+                        Adjust Qty
+                    </button>
+                    <button class="btn btn-xs btn-default"
+                            onclick="frappe.set_route('query-report','Inventory by Streamer',{warehouse:'${loc.warehouse}'})">
+                        View Items
+                    </button>
                 </div>
             </div>
         `;
@@ -181,3 +196,87 @@ function _money(val) {
         minimumFractionDigits: 2, maximumFractionDigits: 2
     });
 }
+
+
+// ── Global helpers called from card buttons ────────────────────────────────
+// These sit on window so inline onclick= handlers on generated HTML can reach them.
+
+window._vortex_add_stock = function (warehouse, label) {
+    const d = new frappe.ui.Dialog({
+        title:  `Add Stock — ${label}`,
+        fields: [
+            {
+                fieldname: "item_code", fieldtype: "Link", label: "Item",
+                options: "Item", reqd: 1, filters: { is_stock_item: 1, disabled: 0 },
+            },
+            { fieldname: "qty",        fieldtype: "Float",    label: "Quantity",         reqd: 1, default: 1 },
+            { fieldname: "basic_rate", fieldtype: "Currency", label: "Cost per Unit ($)", description: "Your purchase cost" },
+            { fieldname: "remarks",    fieldtype: "Small Text", label: "Notes", default: `Stock received into ${label}` },
+        ],
+        primary_action_label: "Add to Inventory",
+        primary_action(v) {
+            frappe.call({
+                method:   "vortex_ops.setup.inventory_setup.quick_stock_receipt",
+                args:     { warehouse, item_code: v.item_code, qty: v.qty,
+                            basic_rate: v.basic_rate || 0, remarks: v.remarks },
+                callback(r) {
+                    if (!r.exc) {
+                        frappe.show_alert({ message: `Added. Entry: ${r.message}`, indicator: "green" });
+                        d.hide();
+                        frappe.pages["vortex-inventory"].on_page_load($(".page-wrapper").get(0));
+                    }
+                },
+            });
+        },
+    });
+    d.show();
+};
+
+
+window._vortex_adjust_stock = function (warehouse, label) {
+    /*
+     * Stock adjustment — corrects qty up or down with a reason.
+     * Positive delta  = stock increased (found extra, received more)
+     * Negative delta  = stock decreased (damaged, lost, miscounted)
+     * Creates a Material Receipt (positive) or Material Issue (negative).
+     */
+    const d = new frappe.ui.Dialog({
+        title:  `Adjust Stock — ${label}`,
+        fields: [
+            {
+                fieldname: "item_code", fieldtype: "Link", label: "Item",
+                options: "Item", reqd: 1, filters: { is_stock_item: 1, disabled: 0 },
+            },
+            {
+                fieldname: "adjustment_type", fieldtype: "Select", label: "Adjustment Type",
+                options: "Add (received / found)\nRemove (damaged / lost / correction)",
+                reqd: 1, default: "Add (received / found)",
+            },
+            { fieldname: "qty",     fieldtype: "Float",      label: "Quantity",  reqd: 1, default: 1 },
+            { fieldname: "reason",  fieldtype: "Small Text", label: "Reason",    reqd: 1,
+              description: "Required for audit trail — e.g. 'Damaged in transit', 'Recount correction'" },
+        ],
+        primary_action_label: "Apply Adjustment",
+        primary_action(v) {
+            const is_add = v.adjustment_type.startsWith("Add");
+            frappe.call({
+                method:   "vortex_ops.setup.inventory_setup.adjust_stock",
+                args: {
+                    warehouse,
+                    item_code:       v.item_code,
+                    qty:             v.qty,
+                    adjustment_type: is_add ? "receipt" : "issue",
+                    reason:          v.reason,
+                },
+                callback(r) {
+                    if (!r.exc) {
+                        frappe.show_alert({ message: `Adjusted. Entry: ${r.message}`, indicator: "green" });
+                        d.hide();
+                        frappe.pages["vortex-inventory"].on_page_load($(".page-wrapper").get(0));
+                    }
+                },
+            });
+        },
+    });
+    d.show();
+};
