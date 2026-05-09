@@ -3,7 +3,13 @@
  "creation": "2025-05-09 00:00:00.000000",
  "doctype": "DocType",
  "engine": "InnoDB",
- "field_order": ["streamer", "role_in_stream", "packages_sold", "notes"],
+ "field_order": [
+  "streamer",
+  "role_in_stream",
+  "packages_sold",
+  "gross_sales",
+  "notes"
+ ],
  "fields": [
   {
    "fieldname": "streamer",
@@ -27,6 +33,13 @@
    "label": "Packages Sold",
    "in_list_view": 1,
    "description": "Packages attributed to this streamer in this show"
+  },
+  {
+   "fieldname": "gross_sales",
+   "fieldtype": "Currency",
+   "label": "Gross Sales",
+   "in_list_view": 1,
+   "description": "Leave blank for primary (uses full show total). Set for co-hosts/guests on multi-streamer shows."
   },
   {
    "fieldname": "notes",

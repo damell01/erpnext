@@ -39,8 +39,16 @@ frappe.ui.form.on("Stream Event", {
         }
     },
 
-    gross_sales(frm)    { frm.trigger("recalc"); },
-    platform_fees(frm)  { frm.trigger("recalc"); },
+    channel(frm) {
+        if (frm.doc.channel) {
+            frappe.db.get_value("Whatnot Channel", frm.doc.channel, "business", r => {
+                if (r && r.business) frm.set_value("company", r.business);
+            });
+        }
+    },
+
+    gross_sales(frm)   { frm.trigger("recalc"); },
+    platform_fees(frm) { frm.trigger("recalc"); },
 
     recalc(frm) {
         const net = Math.round(
