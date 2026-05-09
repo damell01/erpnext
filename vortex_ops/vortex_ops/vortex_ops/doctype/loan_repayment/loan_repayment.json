@@ -1,0 +1,48 @@
+{
+ "actions": [],
+ "creation": "2025-05-09 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["payout_period", "repayment_amount", "status", "notes"],
+ "fields": [
+  {
+   "fieldname": "payout_period",
+   "fieldtype": "Link",
+   "label": "Payout Period",
+   "options": "Payout Period",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "repayment_amount",
+   "fieldtype": "Currency",
+   "label": "Repayment Amount",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Scheduled\nDeducted\nSkipped",
+   "reqd": 1,
+   "default": "Scheduled",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2025-05-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Vortex Ops",
+ "name": "Loan Repayment",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

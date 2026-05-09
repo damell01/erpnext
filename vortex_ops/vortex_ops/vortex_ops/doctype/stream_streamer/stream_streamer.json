@@ -1,0 +1,61 @@
+{
+ "actions": [],
+ "creation": "2025-05-09 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "streamer",
+  "role_in_stream",
+  "packages_sold",
+  "gross_sales",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "streamer",
+   "fieldtype": "Link",
+   "label": "Streamer",
+   "options": "Streamer",
+   "reqd": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "role_in_stream",
+   "fieldtype": "Select",
+   "label": "Role",
+   "options": "\nPrimary\nCo-host\nGuest",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "packages_sold",
+   "fieldtype": "Int",
+   "label": "Packages Sold",
+   "in_list_view": 1,
+   "description": "Packages attributed to this streamer in this show"
+  },
+  {
+   "fieldname": "gross_sales",
+   "fieldtype": "Currency",
+   "label": "Gross Sales",
+   "in_list_view": 1,
+   "description": "Leave blank for primary (uses full show total). Set for co-hosts/guests on multi-streamer shows."
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2025-05-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Vortex Ops",
+ "name": "Stream Streamer",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

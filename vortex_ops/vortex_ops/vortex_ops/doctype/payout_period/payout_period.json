@@ -1,0 +1,133 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2025-05-09 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "period_name",
+  "period_type",
+  "company",
+  "start_date",
+  "end_date",
+  "status",
+  "streams",
+  "totals_section",
+  "total_gross",
+  "total_net",
+  "col_break1",
+  "total_tips",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "PP-.YYYY.-.####"
+  },
+  {
+   "fieldname": "period_name",
+   "fieldtype": "Data",
+   "label": "Period Name",
+   "reqd": 1,
+   "in_list_view": 1,
+   "bold": 1,
+   "description": "e.g. 'Week of Jun 2-8 2025'"
+  },
+  {
+   "fieldname": "period_type",
+   "fieldtype": "Select",
+   "label": "Period Type",
+   "options": "Weekly\nMonthly",
+   "reqd": 1,
+   "default": "Weekly",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Business",
+   "options": "Company",
+   "reqd": 1,
+   "in_list_view": 1,
+   "bold": 1,
+   "description": "Payroll will only include streams from this business's channel(s)"
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "label": "Start Date",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "end_date",
+   "fieldtype": "Date",
+   "label": "End Date",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Open\nProcessing\nClosed",
+   "reqd": 1,
+   "default": "Open",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "streams",
+   "fieldtype": "Table",
+   "label": "Streams in This Period",
+   "options": "Payout Period Stream"
+  },
+  {
+   "fieldname": "totals_section",
+   "fieldtype": "Section Break",
+   "label": "Totals"
+  },
+  {
+   "fieldname": "total_gross",
+   "fieldtype": "Currency",
+   "label": "Total Gross Revenue",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_net",
+   "fieldtype": "Currency",
+   "label": "Total Net Revenue",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_tips",
+   "fieldtype": "Currency",
+   "label": "Total Tips",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes"
+  }
+ ],
+ "links": [],
+ "modified": "2025-05-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Vortex Ops",
+ "name": "Payout Period",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "start_date",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "title_field": "period_name"
+}

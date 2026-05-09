@@ -1,0 +1,86 @@
+{
+ "actions": [],
+ "autoname": "field:channel_name",
+ "creation": "2025-05-09 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "channel_name",
+  "whatnot_username",
+  "whatnot_password",
+  "channel_url",
+  "business",
+  "primary_category",
+  "status",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "channel_name",
+   "fieldtype": "Data",
+   "label": "Channel Name",
+   "reqd": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "whatnot_username",
+   "fieldtype": "Data",
+   "label": "Whatnot Username",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "whatnot_password",
+   "fieldtype": "Password",
+   "label": "Whatnot Password",
+   "description": "Stored encrypted — used by the automated show-recap scraper"
+  },
+  {
+   "fieldname": "channel_url",
+   "fieldtype": "Data",
+   "label": "Channel URL",
+   "options": "URL"
+  },
+  {
+   "fieldname": "business",
+   "fieldtype": "Link",
+   "label": "Business",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "primary_category",
+   "fieldtype": "Select",
+   "label": "Primary Category",
+   "options": "\nSports Cards\nTrading Card Games\nMemorabilia\nMixed"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Active\nInactive\nSuspended",
+   "reqd": 1,
+   "default": "Active",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes"
+  }
+ ],
+ "links": [],
+ "modified": "2025-05-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Vortex Ops",
+ "name": "Whatnot Channel",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "title_field": "channel_name"
+}

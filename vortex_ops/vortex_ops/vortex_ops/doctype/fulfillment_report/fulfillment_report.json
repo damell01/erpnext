@@ -1,0 +1,102 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2025-05-09 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "is_submittable": 1,
+ "field_order": [
+  "naming_series",
+  "stream_event",
+  "fulfillment_date",
+  "total_packages",
+  "packages_shipped",
+  "packages_held",
+  "issues",
+  "status",
+  "notes",
+  "attachments"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "FR-.YYYY.-.####"
+  },
+  {
+   "fieldname": "stream_event",
+   "fieldtype": "Link",
+   "label": "Stream Event",
+   "options": "Stream Event",
+   "reqd": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "fulfillment_date",
+   "fieldtype": "Date",
+   "label": "Fulfillment Date",
+   "reqd": 1,
+   "default": "Today",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "total_packages",
+   "fieldtype": "Int",
+   "label": "Total Packages",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "packages_shipped",
+   "fieldtype": "Int",
+   "label": "Packages Shipped",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "packages_held",
+   "fieldtype": "Int",
+   "label": "Packages Held",
+   "description": "Not yet shipped — awaiting pickup or carrier"
+  },
+  {
+   "fieldname": "issues",
+   "fieldtype": "Small Text",
+   "label": "Issues",
+   "description": "Any fulfillment problems, missing items, address issues"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nSubmitted\nReviewed",
+   "reqd": 1,
+   "default": "Draft",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "attachments",
+   "fieldtype": "Attach",
+   "label": "Attachments",
+   "description": "Packing photos, carrier manifests"
+  }
+ ],
+ "links": [],
+ "modified": "2025-05-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Vortex Ops",
+ "name": "Fulfillment Report",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "fulfillment_date",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

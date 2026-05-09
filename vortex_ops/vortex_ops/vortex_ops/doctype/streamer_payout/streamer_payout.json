@@ -1,0 +1,211 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2025-05-09 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "is_submittable": 1,
+ "field_order": [
+  "naming_series",
+  "payout_period",
+  "streamer",
+  "adp_employee_id",
+  "earnings_section",
+  "gross_sales",
+  "payout_type",
+  "col_break1",
+  "profit_share_pct",
+  "profit_share_amount",
+  "package_count",
+  "package_rate",
+  "package_payout",
+  "col_break2",
+  "tips",
+  "include_tips",
+  "deductions_section",
+  "owner_platform_fee_pct",
+  "owner_platform_fee_amount",
+  "adjustments",
+  "adjustment_notes",
+  "col_break3",
+  "loan_deductions",
+  "total_section",
+  "total_payout",
+  "status"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "PAY-.YYYY.-.####"
+  },
+  {
+   "fieldname": "payout_period",
+   "fieldtype": "Link",
+   "label": "Payout Period",
+   "options": "Payout Period",
+   "reqd": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "streamer",
+   "fieldtype": "Link",
+   "label": "Streamer",
+   "options": "Streamer",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "adp_employee_id",
+   "fieldtype": "Data",
+   "label": "ADP Employee ID",
+   "read_only": 1,
+   "description": "Auto-filled from Streamer record"
+  },
+  {
+   "fieldname": "earnings_section",
+   "fieldtype": "Section Break",
+   "label": "Earnings"
+  },
+  {
+   "fieldname": "gross_sales",
+   "fieldtype": "Currency",
+   "label": "Gross Sales",
+   "description": "Total sales attributed to this streamer for the period"
+  },
+  {
+   "fieldname": "payout_type",
+   "fieldtype": "Select",
+   "label": "Payout Type",
+   "options": "\nProfit Share\nPackage\nHourly\nFlat Rate",
+   "read_only": 1,
+   "description": "Auto-filled from Streamer record"
+  },
+  {
+   "fieldname": "col_break1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "profit_share_pct",
+   "fieldtype": "Percent",
+   "label": "Profit Share %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "profit_share_amount",
+   "fieldtype": "Currency",
+   "label": "Profit Share Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "package_count",
+   "fieldtype": "Int",
+   "label": "Package Count"
+  },
+  {
+   "fieldname": "package_rate",
+   "fieldtype": "Currency",
+   "label": "Package Rate",
+   "read_only": 1
+  },
+  {
+   "fieldname": "package_payout",
+   "fieldtype": "Currency",
+   "label": "Package Payout",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tips",
+   "fieldtype": "Currency",
+   "label": "Tips"
+  },
+  {
+   "fieldname": "include_tips",
+   "fieldtype": "Check",
+   "label": "Include Tips in Payout",
+   "default": "1",
+   "read_only": 1,
+   "description": "Auto-filled from Streamer settings"
+  },
+  {
+   "fieldname": "deductions_section",
+   "fieldtype": "Section Break",
+   "label": "Deductions"
+  },
+  {
+   "fieldname": "owner_platform_fee_pct",
+   "fieldtype": "Percent",
+   "label": "Owner Platform Fee %",
+   "read_only": 1,
+   "description": "Auto-filled from Streamer — owner's percentage taken from gross"
+  },
+  {
+   "fieldname": "owner_platform_fee_amount",
+   "fieldtype": "Currency",
+   "label": "Owner Platform Fee Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "adjustments",
+   "fieldtype": "Currency",
+   "label": "Adjustments",
+   "description": "Positive = bonus, negative = deduction"
+  },
+  {
+   "fieldname": "adjustment_notes",
+   "fieldtype": "Small Text",
+   "label": "Adjustment Notes"
+  },
+  {
+   "fieldname": "col_break3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "loan_deductions",
+   "fieldtype": "Currency",
+   "label": "Loan Deductions",
+   "read_only": 1,
+   "description": "Auto from scheduled Loan Repayments for this period"
+  },
+  {
+   "fieldname": "total_section",
+   "fieldtype": "Section Break",
+   "label": "Total"
+  },
+  {
+   "fieldname": "total_payout",
+   "fieldtype": "Currency",
+   "label": "TOTAL PAYOUT",
+   "read_only": 1,
+   "bold": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nReviewed\nApproved\nExported",
+   "reqd": 1,
+   "default": "Draft",
+   "in_list_view": 1
+  }
+ ],
+ "links": [],
+ "modified": "2025-05-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Vortex Ops",
+ "name": "Streamer Payout",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

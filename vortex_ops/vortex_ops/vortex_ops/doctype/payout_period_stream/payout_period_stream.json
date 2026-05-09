@@ -1,0 +1,53 @@
+{
+ "actions": [],
+ "creation": "2025-05-09 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["stream_event", "stream_date", "gross_sales", "net_earned"],
+ "fields": [
+  {
+   "fieldname": "stream_event",
+   "fieldtype": "Link",
+   "label": "Stream Event",
+   "options": "Stream Event",
+   "reqd": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "stream_date",
+   "fieldtype": "Date",
+   "label": "Stream Date",
+   "in_list_view": 1,
+   "read_only": 1,
+   "fetch_from": "stream_event.stream_date"
+  },
+  {
+   "fieldname": "gross_sales",
+   "fieldtype": "Currency",
+   "label": "Gross Sales",
+   "in_list_view": 1,
+   "read_only": 1,
+   "fetch_from": "stream_event.gross_sales"
+  },
+  {
+   "fieldname": "net_earned",
+   "fieldtype": "Currency",
+   "label": "Net Earned",
+   "in_list_view": 1,
+   "read_only": 1,
+   "fetch_from": "stream_event.net_earned"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2025-05-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Vortex Ops",
+ "name": "Payout Period Stream",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

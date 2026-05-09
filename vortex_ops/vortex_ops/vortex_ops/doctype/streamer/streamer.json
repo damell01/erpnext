@@ -1,0 +1,152 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2025-05-09 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "streamer_name",
+  "legal_name",
+  "email",
+  "phone",
+  "user",
+  "channel",
+  "warehouse",
+  "status",
+  "payout_section",
+  "payout_type",
+  "payout_percentage",
+  "package_rate",
+  "owner_platform_fee_pct",
+  "include_tips",
+  "adp_employee_id",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "STRMR-.####"
+  },
+  {
+   "fieldname": "streamer_name",
+   "fieldtype": "Data",
+   "label": "Streamer Name",
+   "reqd": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "legal_name",
+   "fieldtype": "Data",
+   "label": "Full Legal Name",
+   "reqd": 1,
+   "description": "Used for payroll export (ADP)"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone"
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "Linked User",
+   "options": "User",
+   "description": "ERPNext login account for this streamer"
+  },
+  {
+   "fieldname": "channel",
+   "fieldtype": "Link",
+   "label": "Primary Channel",
+   "options": "Whatnot Channel",
+   "description": "Default Whatnot channel this streamer streams on"
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Assigned Warehouse",
+   "options": "Warehouse",
+   "description": "Inventory location for this streamer. Use the 'Create Warehouse' button to auto-create."
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Active\nInactive\nOn Leave",
+   "reqd": 1,
+   "default": "Active",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "payout_section",
+   "fieldtype": "Section Break",
+   "label": "Payout Settings"
+  },
+  {
+   "fieldname": "payout_type",
+   "fieldtype": "Select",
+   "label": "Payout Type",
+   "options": "\nProfit Share\nPackage\nHourly\nFlat Rate",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "payout_percentage",
+   "fieldtype": "Percent",
+   "label": "Profit Share %",
+   "depends_on": "eval:doc.payout_type == 'Profit Share'",
+   "description": "Percentage of net sales paid to this streamer"
+  },
+  {
+   "fieldname": "package_rate",
+   "fieldtype": "Currency",
+   "label": "Package Rate",
+   "depends_on": "eval:doc.payout_type == 'Package'",
+   "description": "Dollar amount earned per package sold"
+  },
+  {
+   "fieldname": "owner_platform_fee_pct",
+   "fieldtype": "Percent",
+   "label": "Owner Platform Fee %",
+   "description": "Percentage deducted from gross sales as owner/platform overhead fee"
+  },
+  {
+   "fieldname": "include_tips",
+   "fieldtype": "Check",
+   "label": "Include Tips in Payout",
+   "default": "1"
+  },
+  {
+   "fieldname": "adp_employee_id",
+   "fieldtype": "Data",
+   "label": "ADP Employee ID",
+   "description": "Matched to payroll export — must match ADP exactly"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes"
+  }
+ ],
+ "links": [],
+ "modified": "2025-05-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Vortex Ops",
+ "name": "Streamer",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "title_field": "streamer_name"
+}

@@ -1,0 +1,48 @@
+{
+ "add_total_row": 0,
+ "columns": [],
+ "creation": "2025-05-09 00:00:00.000000",
+ "disabled": 0,
+ "doctype": "Report",
+ "filters": [
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse / Location",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "streamer",
+   "fieldtype": "Link",
+   "label": "Streamer",
+   "options": "Streamer"
+  },
+  {
+   "fieldname": "item_group",
+   "fieldtype": "Link",
+   "label": "Category",
+   "options": "Item Group"
+  },
+  {
+   "default": "0",
+   "fieldname": "include_zero_stock",
+   "fieldtype": "Check",
+   "label": "Include Zero Stock"
+  }
+ ],
+ "is_standard": "Yes",
+ "modified": "2025-05-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Vortex Ops",
+ "name": "Inventory by Streamer",
+ "owner": "Administrator",
+ "ref_doctype": "Item",
+ "report_name": "Inventory by Streamer",
+ "report_type": "Script Report",
+ "roles": [
+  {"role": "Vortex Admin"},
+  {"role": "Vortex Operations"},
+  {"role": "Vortex Streamer"},
+  {"role": "Vortex Fulfillment"}
+ ]
+}

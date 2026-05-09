@@ -1,0 +1,187 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2025-05-09 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "is_submittable": 1,
+ "field_order": [
+  "naming_series",
+  "stream_event",
+  "streamer",
+  "upload_date",
+  "upload_status",
+  "col_break1",
+  "total_lines",
+  "matched_lines",
+  "unmatched_lines",
+  "col_break2",
+  "total_sale_amount",
+  "total_cogs_estimate",
+  "file_section",
+  "uploaded_file",
+  "sales_lines",
+  "review_section",
+  "review_notes",
+  "reviewed_by",
+  "reviewed_on",
+  "inventory_section",
+  "inventory_processed",
+  "stock_entry_ref"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "SU-.YYYY.-.####"
+  },
+  {
+   "fieldname": "stream_event",
+   "fieldtype": "Link",
+   "label": "Stream Event",
+   "options": "Stream Event",
+   "reqd": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "streamer",
+   "fieldtype": "Link",
+   "label": "Streamer",
+   "options": "Streamer",
+   "reqd": 1,
+   "in_list_view": 1,
+   "bold": 1,
+   "description": "Auto-filled from stream's primary streamer — change for co-host uploads"
+  },
+  {
+   "fieldname": "upload_date",
+   "fieldtype": "Date",
+   "label": "Upload Date",
+   "reqd": 1,
+   "default": "Today",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "col_break2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_sale_amount",
+   "fieldtype": "Currency",
+   "label": "Total Sale Amount",
+   "read_only": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "total_cogs_estimate",
+   "fieldtype": "Currency",
+   "label": "Est. COGS",
+   "read_only": 1,
+   "description": "Based on current item valuation rates"
+  },
+  {
+   "fieldname": "file_section",
+   "fieldtype": "Section Break",
+   "label": "CSV File (optional — or enter lines manually below)"
+  },
+  {
+   "fieldname": "uploaded_file",
+   "fieldtype": "Attach",
+   "label": "Whatnot Recap File",
+   "description": "CSV or Excel recap from Whatnot — optional if entering lines manually"
+  },
+  {
+   "fieldname": "upload_status",
+   "fieldtype": "Select",
+   "label": "Upload Status",
+   "options": "Pending\nUnder Review\nApproved\nRejected\nProcessed",
+   "reqd": 1,
+   "default": "Pending",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "col_break1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_lines",
+   "fieldtype": "Int",
+   "label": "Total Lines",
+   "read_only": 1
+  },
+  {
+   "fieldname": "matched_lines",
+   "fieldtype": "Int",
+   "label": "Matched Lines",
+   "read_only": 1
+  },
+  {
+   "fieldname": "unmatched_lines",
+   "fieldtype": "Int",
+   "label": "Unmatched Lines",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sales_lines",
+   "fieldtype": "Table",
+   "label": "Sales Lines",
+   "options": "Sales Upload Line"
+  },
+  {
+   "fieldname": "review_section",
+   "fieldtype": "Section Break",
+   "label": "Review"
+  },
+  {
+   "fieldname": "review_notes",
+   "fieldtype": "Text",
+   "label": "Review Notes"
+  },
+  {
+   "fieldname": "reviewed_by",
+   "fieldtype": "Link",
+   "label": "Reviewed By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reviewed_on",
+   "fieldtype": "Datetime",
+   "label": "Reviewed On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "inventory_section",
+   "fieldtype": "Section Break",
+   "label": "Inventory"
+  },
+  {
+   "fieldname": "inventory_processed",
+   "fieldtype": "Check",
+   "label": "Inventory Processed",
+   "read_only": 1,
+   "description": "Set to true after inventory has been deducted from streamer warehouse(s)"
+  },
+  {
+   "fieldname": "stock_entry_ref",
+   "fieldtype": "Link",
+   "label": "Stock Entry Ref",
+   "options": "Stock Entry",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2025-05-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Vortex Ops",
+ "name": "Sales Upload",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "upload_date",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
