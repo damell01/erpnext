@@ -15,6 +15,30 @@ frappe.ui.form.on("Stream Event", {
         if (!frm.is_new()) {
             _add_financial_indicators(frm);
 
+            // Whatnot auto-scrape — only shown when a show URL is set
+            if (frm.doc.whatnot_show_url && frm.doc.docstatus === 1) {
+                frm.add_custom_button("Fetch from Whatnot", () => {
+                    frappe.confirm(
+                        "Scrape the Whatnot show recap and create a Sales Upload automatically?<br><br>"
+                        + `<small>${frm.doc.whatnot_show_url}</small>`,
+                        () => {
+                            frappe.show_progress("Scraping Whatnot…", 50, 100,
+                                "Logging in and pulling show data…");
+                            frappe.call({
+                                method: "vortex_ops.automation.whatnot_scraper.fetch_and_create_upload",
+                                args:   { stream_event_name: frm.doc.name },
+                                callback(r) {
+                                    frappe.hide_progress();
+                                    if (r.message) {
+                                        frappe.set_route("Form", "Sales Upload", r.message);
+                                    }
+                                },
+                            });
+                        }
+                    );
+                }, "Actions");
+            }
+
             if (frm.doc.docstatus === 1) {
                 [
                     ["Seller Report",       "stream_event"],
