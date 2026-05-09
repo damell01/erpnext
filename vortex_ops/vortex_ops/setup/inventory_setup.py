@@ -153,6 +153,34 @@ def setup_from_ui():
 
 
 @frappe.whitelist()
+def transfer_stock(from_warehouse, to_warehouse, item_code, qty, remarks=""):
+    """
+    Material Transfer between warehouses.
+    Typical use: split a bulk shipment from Main Storage into streamer warehouses.
+    ERPNext handles valuation and ledger — we just build the Stock Entry.
+    """
+    company = frappe.defaults.get_global_default("company")
+
+    se = frappe.new_doc("Stock Entry")
+    se.stock_entry_type = "Material Transfer"
+    se.company          = company
+    se.remarks          = remarks or f"Transfer from {from_warehouse} to {to_warehouse}"
+
+    se.append("items", {
+        "item_code":   item_code,
+        "qty":         float(qty),
+        "s_warehouse": from_warehouse,
+        "t_warehouse": to_warehouse,
+    })
+
+    se.insert(ignore_permissions=True)
+    se.submit()
+    frappe.db.commit()
+
+    return se.name
+
+
+@frappe.whitelist()
 def quick_stock_receipt(warehouse, item_code, qty, basic_rate=0, remarks=""):
     """
     Create a Material Receipt Stock Entry into a specific warehouse.
