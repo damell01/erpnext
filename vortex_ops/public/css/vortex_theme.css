@@ -1,0 +1,126 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Vortex Ops — White-Label Theme
+   Removes ERPNext / Frappe branding from all visible surfaces.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Navbar & logo ────────────────────────────────────────────────────────── */
+
+/* Hide any ERPNext logo images in the navbar */
+img[src*="erpnext"],
+img[alt*="ERPNext" i],
+img[title*="ERPNext" i],
+.navbar img[src*="frappe"],
+.erpnext-logo,
+.frappe-logo {
+    display: none !important;
+}
+
+/* ── Footer "Powered by" ───────────────────────────────────────────────────── */
+
+.powered-by,
+.footer-powered-by,
+.web-footer .powered-by,
+[class*="powered-by"],
+footer .powered-by,
+.frappe-footer {
+    display: none !important;
+}
+
+/* ── External help / docs links to erpnext.com / frappe.io ────────────────── */
+
+a[href*="erpnext.com"],
+a[href*="frappe.io"],
+a[href*="docs.erpnext"],
+a[href*="discuss.frappe"],
+a[href*="frappeframework"],
+li:has(> a[href*="erpnext.com"]),
+li:has(> a[href*="frappe.io"]),
+li:has(> a[href*="discuss.frappe"]) {
+    display: none !important;
+}
+
+/* ── Login page ────────────────────────────────────────────────────────────── */
+
+/* Replace the default login card header with a clean Vortex brand */
+.login-content .page-card-head::before {
+    content: "Vortex Ops";
+    display: block;
+    font-size: 22px;
+    font-weight: 700;
+    color: #E8630A;
+    margin-bottom: 6px;
+}
+
+/* Hide any "ERPNext" text nodes that get rendered on the login card */
+.page-card-head [class*="brand"],
+.page-card-head [class*="logo"] {
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+}
+
+/* ── Module / workspace tiles — hide non-Vortex apps ─────────────────────── */
+
+/* Hide ERPNext app tiles on the home workspace picker */
+.app-tile[data-app="erpnext"],
+.app-tile[data-app="frappe"],
+.module-box[data-module*="erpnext" i],
+[data-app-name="ERPNext"],
+.app-listing-item[data-app="erpnext"] {
+    display: none !important;
+}
+
+/* ── Browser / desk chrome ─────────────────────────────────────────────────── */
+
+/* Remove any ERPNext credit lines in the desk footer area */
+.desk-footer [class*="powered"],
+.desk-footer [class*="frappe"],
+.footer-items [class*="powered"] {
+    display: none !important;
+}
+
+/* ── "About" dialog — hide third-party platform details ─────────────────── */
+
+.about-dialog [class*="erpnext"],
+.about-dialog [class*="frappe"] {
+    display: none !important;
+}
+
+/* ── Notification / alert text ─────────────────────────────────────────────── */
+
+/* Suppress any "Update available for ERPNext" alerts */
+.update-banner,
+.frappe-update-message {
+    display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Vortex brand color accents
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Primary accent — overrides ERPNext blue in key interactive elements */
+.btn-primary,
+.badge-primary,
+a.badge-primary {
+    background-color: #E8630A !important;
+    border-color: #E8630A !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: #c95508 !important;
+    border-color: #c95508 !important;
+}
+
+/* Sidebar active link highlight */
+.sidebar-item.selected,
+.sidebar-item.selected a {
+    color: #E8630A !important;
+    border-left-color: #E8630A !important;
+}
+
+/* Form save / submit button accent */
+[data-doctype] .page-head .btn-primary {
+    background-color: #E8630A !important;
+    border-color: #E8630A !important;
+}
