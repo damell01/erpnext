@@ -146,6 +146,87 @@ def create_streamer_warehouse(streamer_name: str, company: str = None, abbr: str
 
 
 @frappe.whitelist()
+def create_inventory_location(location_name, warehouse_type="Stores",
+                              company=None, abbr=None):
+    """
+    Create a standalone inventory warehouse (not tied to any streamer).
+    Use for physical locations: 'Back Room', 'Storage Unit A', 'Show Inventory', etc.
+    The name is used exactly as given — no 'Inventory' suffix added.
+    Returns the full warehouse name (e.g. 'Back Room - VB').
+    """
+    if not company:
+        company = frappe.defaults.get_global_default("company")
+    if not abbr:
+        abbr = frappe.db.get_value("Company", company, "abbr") or "VB"
+
+    full_name   = f"{location_name} - {abbr}"
+    parent_name = f"All Warehouses - {abbr}"
+
+    if frappe.db.exists("Warehouse", full_name):
+        frappe.msgprint(f"Location already exists: {full_name}", indicator="blue")
+        return full_name
+
+    doc = frappe.new_doc("Warehouse")
+    doc.warehouse_name   = location_name
+    doc.parent_warehouse = parent_name
+    doc.warehouse_type   = warehouse_type
+    doc.company          = company
+    doc.insert(ignore_permissions=True)
+    frappe.db.commit()
+
+    frappe.msgprint(f"Location created: {full_name}", indicator="green")
+    return full_name
+
+
+@frappe.whitelist()
+def list_inventory_locations():
+    """
+    Return all active Vortex warehouses with their current stock value.
+    Used to build the full inventory overview.
+    """
+    company = frappe.defaults.get_global_default("company")
+    if not company:
+        return []
+
+    # Map streamer warehouses to names
+    streamer_wh_map = {
+        s.warehouse: s.streamer_name
+        for s in frappe.get_all(
+            "Streamer", fields=["streamer_name", "warehouse"]
+        )
+        if s.warehouse
+    }
+
+    locations = frappe.db.sql(
+        """
+        SELECT
+            w.name                                          warehouse,
+            w.warehouse_type                                wh_type,
+            COALESCE(SUM(b.actual_qty), 0)                 total_qty,
+            COALESCE(SUM(b.actual_qty * i.valuation_rate), 0) total_value,
+            COUNT(DISTINCT CASE WHEN b.actual_qty > 0
+                                THEN b.item_code END)      sku_count
+        FROM `tabWarehouse` w
+        LEFT JOIN `tabBin` b  ON b.warehouse  = w.name
+        LEFT JOIN `tabItem` i ON i.item_code  = b.item_code
+                              AND i.disabled  = 0
+        WHERE w.company = %s
+          AND w.is_group = 0
+          AND w.disabled = 0
+        GROUP BY w.name
+        ORDER BY w.name
+        """,
+        company,
+        as_dict=True,
+    )
+
+    for loc in locations:
+        loc["label"] = streamer_wh_map.get(loc["warehouse"], loc["warehouse"])
+
+    return locations
+
+
+@frappe.whitelist()
 def setup_from_ui():
     """Called from the Vortex Ops workspace setup button."""
     results = run()

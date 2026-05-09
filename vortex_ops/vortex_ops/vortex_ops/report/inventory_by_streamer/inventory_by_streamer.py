@@ -3,63 +3,110 @@ import frappe
 
 def execute(filters=None):
     f = filters or {}
+    company = frappe.defaults.get_global_default("company")
 
-    streamers = frappe.get_all(
+    # Build a map of warehouse -> display label.
+    # Streamer-linked warehouses show the streamer name.
+    # All other warehouses show the warehouse name itself.
+    streamer_wh_map = {}
+    for s in frappe.get_all(
         "Streamer",
-        filters={"status": "Active"},
-        fields=["name", "streamer_name", "warehouse"],
-    )
+        filters={"status": ["!=", ""]},
+        fields=["streamer_name", "warehouse"],
+    ):
+        if s.warehouse:
+            streamer_wh_map[s.warehouse] = s.streamer_name
 
-    # Optionally filter to one streamer
-    if f.get("streamer"):
-        streamers = [s for s in streamers if s.name == f["streamer"]]
+    # Build WHERE clause
+    cond = [
+        "b.actual_qty > 0",
+        "i.disabled = 0",
+        "i.is_stock_item = 1",
+        "w.company = %s",
+    ]
+    vals = [company]
 
-    wh_map = {s.warehouse: s.streamer_name for s in streamers if s.warehouse}
-    whs    = [s.warehouse for s in streamers if s.warehouse]
+    if f.get("warehouse"):
+        cond.append("b.warehouse = %s")
+        vals.append(f["warehouse"])
+    elif f.get("streamer"):
+        wh = frappe.db.get_value("Streamer", f["streamer"], "warehouse")
+        if not wh:
+            return [], []
+        cond.append("b.warehouse = %s")
+        vals.append(wh)
 
-    if not whs:
-        return [], []
+    if f.get("item_group"):
+        cond.append("i.item_group = %s")
+        vals.append(f["item_group"])
 
-    ph   = ",".join(["%s"] * len(whs))
+    where = " AND ".join(cond)
+
     data = frappe.db.sql(
         f"""
         SELECT
-            b.warehouse                              "Warehouse",
-            i.item_code                              "Item Code",
-            i.item_name                              "Item Name",
-            i.item_group                             "Category",
-            b.actual_qty                             "On Hand",
-            b.actual_qty - b.reserved_qty            "Available",
-            i.valuation_rate                         "Unit Cost",
-            b.actual_qty * i.valuation_rate          "Total Value",
-            i.reorder_level                          "Reorder At",
+            b.warehouse                                         AS warehouse,
+            i.item_code                                         AS item_code,
+            i.item_name                                         AS item_name,
+            i.item_group                                        AS item_group,
+            b.actual_qty                                        AS on_hand,
+            GREATEST(b.actual_qty - b.reserved_qty, 0)         AS available,
+            i.valuation_rate                                    AS unit_cost,
+            b.actual_qty * i.valuation_rate                     AS total_value,
+            i.reorder_level                                     AS reorder_at,
             CASE WHEN b.actual_qty <= i.reorder_level
-                 THEN 'LOW STOCK' ELSE '' END        "Alert"
+                 AND i.reorder_level > 0
+                 THEN 'LOW STOCK' ELSE '' END                   AS alert
         FROM `tabBin` b
-        JOIN `tabItem` i ON i.item_code = b.item_code
-        WHERE b.warehouse IN ({ph})
-          AND b.actual_qty > 0
-          AND i.disabled = 0
+        JOIN `tabItem` i     ON i.item_code     = b.item_code
+        JOIN `tabWarehouse` w ON w.name         = b.warehouse
+        WHERE {where}
         ORDER BY b.warehouse, i.item_name
         """,
-        whs,
+        vals,
         as_dict=True,
     )
 
+    # Attach display label and total row per location
+    current_wh   = None
+    output       = []
+    grand_value  = 0
+
     for row in data:
-        row["Streamer"] = wh_map.get(row["Warehouse"], "")
+        wh = row["warehouse"]
+
+        # Location section header row when warehouse changes
+        if wh != current_wh:
+            if current_wh is not None:
+                # blank separator
+                output.append({})
+            current_wh = wh
+
+        location = streamer_wh_map.get(wh, wh)   # person name OR warehouse name
+        row["location"] = location
+        grand_value += row["total_value"] or 0
+        output.append(row)
+
+    # Grand total footer
+    if output:
+        output.append({
+            "location":    "TOTAL",
+            "total_value": grand_value,
+        })
 
     columns = [
-        {"label": "Streamer",    "fieldtype": "Data",     "width": 130},
-        {"label": "Item Code",   "fieldtype": "Link",     "width": 160,
+        {"label": "Location",    "fieldname": "location",    "fieldtype": "Data",     "width": 160},
+        {"label": "Warehouse",   "fieldname": "warehouse",   "fieldtype": "Link",     "width": 180,
+         "options": "Warehouse"},
+        {"label": "Item Code",   "fieldname": "item_code",   "fieldtype": "Link",     "width": 150,
          "options": "Item"},
-        {"label": "Item Name",   "fieldtype": "Data",     "width": 230},
-        {"label": "Category",    "fieldtype": "Data",     "width": 130},
-        {"label": "On Hand",     "fieldtype": "Float",    "width": 90},
-        {"label": "Available",   "fieldtype": "Float",    "width": 90},
-        {"label": "Unit Cost",   "fieldtype": "Currency", "width": 100},
-        {"label": "Total Value", "fieldtype": "Currency", "width": 110},
-        {"label": "Reorder At",  "fieldtype": "Float",    "width": 90},
-        {"label": "Alert",       "fieldtype": "Data",     "width": 100},
+        {"label": "Item Name",   "fieldname": "item_name",   "fieldtype": "Data",     "width": 220},
+        {"label": "Category",    "fieldname": "item_group",  "fieldtype": "Data",     "width": 130},
+        {"label": "On Hand",     "fieldname": "on_hand",     "fieldtype": "Float",    "width": 90},
+        {"label": "Available",   "fieldname": "available",   "fieldtype": "Float",    "width": 90},
+        {"label": "Unit Cost",   "fieldname": "unit_cost",   "fieldtype": "Currency", "width": 100},
+        {"label": "Total Value", "fieldname": "total_value", "fieldtype": "Currency", "width": 110},
+        {"label": "Reorder At",  "fieldname": "reorder_at",  "fieldtype": "Float",    "width": 90},
+        {"label": "Alert",       "fieldname": "alert",       "fieldtype": "Data",     "width": 90},
     ]
-    return columns, data
+    return columns, output
