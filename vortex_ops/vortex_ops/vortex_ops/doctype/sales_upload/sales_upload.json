@@ -8,13 +8,18 @@
  "field_order": [
   "naming_series",
   "stream_event",
+  "streamer",
   "upload_date",
-  "uploaded_file",
   "upload_status",
   "col_break1",
   "total_lines",
   "matched_lines",
   "unmatched_lines",
+  "col_break2",
+  "total_sale_amount",
+  "total_cogs_estimate",
+  "file_section",
+  "uploaded_file",
   "sales_lines",
   "review_section",
   "review_notes",
@@ -41,6 +46,16 @@
    "bold": 1
   },
   {
+   "fieldname": "streamer",
+   "fieldtype": "Link",
+   "label": "Streamer",
+   "options": "Streamer",
+   "reqd": 1,
+   "in_list_view": 1,
+   "bold": 1,
+   "description": "Auto-filled from stream's primary streamer — change for co-host uploads"
+  },
+  {
    "fieldname": "upload_date",
    "fieldtype": "Date",
    "label": "Upload Date",
@@ -49,11 +64,33 @@
    "in_list_view": 1
   },
   {
+   "fieldname": "col_break2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_sale_amount",
+   "fieldtype": "Currency",
+   "label": "Total Sale Amount",
+   "read_only": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "total_cogs_estimate",
+   "fieldtype": "Currency",
+   "label": "Est. COGS",
+   "read_only": 1,
+   "description": "Based on current item valuation rates"
+  },
+  {
+   "fieldname": "file_section",
+   "fieldtype": "Section Break",
+   "label": "CSV File (optional — or enter lines manually below)"
+  },
+  {
    "fieldname": "uploaded_file",
    "fieldtype": "Attach",
-   "label": "Uploaded File",
-   "reqd": 1,
-   "description": "CSV or Excel recap from Whatnot — flexible column detection"
+   "label": "Whatnot Recap File",
+   "description": "CSV or Excel recap from Whatnot — optional if entering lines manually"
   },
   {
    "fieldname": "upload_status",
