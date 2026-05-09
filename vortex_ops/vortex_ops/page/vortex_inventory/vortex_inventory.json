@@ -1,0 +1,18 @@
+{
+ "creation": "2025-05-09 00:00:00.000000",
+ "doctype": "Page",
+ "modified": "2025-05-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Vortex Ops",
+ "name": "vortex-inventory",
+ "owner": "Administrator",
+ "page_name": "vortex-inventory",
+ "roles": [
+  {"role": "Vortex Admin"},
+  {"role": "Vortex Operations"},
+  {"role": "Vortex Fulfillment"},
+  {"role": "Vortex Streamer"}
+ ],
+ "standard": "Yes",
+ "title": "Vortex Inventory"
+}
