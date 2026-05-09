@@ -22,6 +22,12 @@
    "fieldtype": "Link",
    "label": "Category",
    "options": "Item Group"
+  },
+  {
+   "default": "0",
+   "fieldname": "include_zero_stock",
+   "fieldtype": "Check",
+   "label": "Include Zero Stock"
   }
  ],
  "is_standard": "Yes",
