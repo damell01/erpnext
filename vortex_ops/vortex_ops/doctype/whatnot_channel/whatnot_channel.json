@@ -7,6 +7,7 @@
  "field_order": [
   "channel_name",
   "whatnot_username",
+  "whatnot_password",
   "channel_url",
   "business",
   "primary_category",
@@ -28,6 +29,12 @@
    "label": "Whatnot Username",
    "reqd": 1,
    "in_list_view": 1
+  },
+  {
+   "fieldname": "whatnot_password",
+   "fieldtype": "Password",
+   "label": "Whatnot Password",
+   "description": "Stored encrypted — used by the automated show-recap scraper"
   },
   {
    "fieldname": "channel_url",

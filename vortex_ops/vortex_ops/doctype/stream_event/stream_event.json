@@ -27,6 +27,7 @@
   "cogs",
   "gross_profit",
   "status_section",
+  "whatnot_show_url",
   "stream_status",
   "ai_summary",
   "notes",
@@ -162,6 +163,13 @@
    "fieldname": "status_section",
    "fieldtype": "Section Break",
    "label": "Status"
+  },
+  {
+   "fieldname": "whatnot_show_url",
+   "fieldtype": "Data",
+   "label": "Whatnot Show URL",
+   "options": "URL",
+   "description": "Paste the Whatnot show URL here to enable automatic recap scraping"
   },
   {
    "fieldname": "stream_status",

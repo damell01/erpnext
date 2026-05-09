@@ -7,6 +7,30 @@ frappe.ui.form.on("Sales Upload", {
         const unmatched = frm.doc.unmatched_lines || 0;
         const total     = frm.doc.total_lines     || 0;
 
+        // Whatnot auto-scrape — shown when stream has a show URL and no file yet
+        if (!frm.doc.uploaded_file && status === "Pending" && frm.doc.stream_event) {
+            frappe.db.get_value("Stream Event", frm.doc.stream_event, "whatnot_show_url", r => {
+                if (r && r.whatnot_show_url) {
+                    frm.add_custom_button("Fetch from Whatnot", () => {
+                        frappe.confirm(
+                            "Scrape the Whatnot show recap and populate lines automatically?",
+                            () => {
+                                frappe.show_progress("Scraping Whatnot…", 50, 100);
+                                frappe.call({
+                                    method: "vortex_ops.automation.whatnot_scraper.fetch_and_create_upload",
+                                    args:   { stream_event_name: frm.doc.stream_event },
+                                    callback(r) {
+                                        frappe.hide_progress();
+                                        frm.refresh();
+                                    },
+                                });
+                            }
+                        );
+                    }, "Actions");
+                }
+            });
+        }
+
         // CSV path — only show if a file is attached
         if (frm.doc.uploaded_file && status === "Pending") {
             frm.add_custom_button("Parse CSV File", () =>
