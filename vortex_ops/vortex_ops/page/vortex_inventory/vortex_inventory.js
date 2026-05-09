@@ -147,6 +147,12 @@ function _render_grid(locs) {
                         <div style="font-size:11px; color:#6b7280;">SKUs</div>
                     </div>
                     <div>
+                        <div style="font-size:22px; font-weight:700; color:#374151;">
+                            ${Math.round(loc.total_qty || 0)}
+                        </div>
+                        <div style="font-size:11px; color:#6b7280;">Total Units</div>
+                    </div>
+                    <div>
                         <div style="font-size:22px; font-weight:700; color:#1B2A4A;">
                             ${_money(loc.total_value || 0)}
                         </div>
@@ -161,12 +167,16 @@ function _render_grid(locs) {
                         + Add Stock
                     </button>
                     <button class="btn btn-xs btn-default"
+                            onclick="_vortex_remove_stock('${wSafe}','${lSafe}')">
+                        − Remove Stock
+                    </button>
+                    <button class="btn btn-xs btn-default"
                             onclick="_vortex_transfer_stock('${wSafe}','${lSafe}')">
-                        Transfer In
+                        Transfer
                     </button>
                     <button class="btn btn-xs btn-default"
                             onclick="_vortex_adjust_stock('${wSafe}','${lSafe}')">
-                        Adjust Qty
+                        Adjust
                     </button>
                     <button class="btn btn-xs btn-default"
                             onclick="frappe.set_route('query-report','Inventory by Streamer',
@@ -437,6 +447,80 @@ window._vortex_transfer_stock = function (to_warehouse, label) {
                 callback(r) {
                     if (!r.exc) {
                         frappe.show_alert({ message: `Transferred. Entry: ${r.message}`, indicator: "green" });
+                        d.hide();
+                        _load();
+                    }
+                },
+            });
+        },
+    });
+    d.show();
+};
+
+
+window._vortex_remove_stock = function (warehouse, label) {
+    const d = new frappe.ui.Dialog({
+        title:  `Remove Stock — ${label}`,
+        fields: [
+            {
+                fieldname: "item_code",
+                fieldtype: "Link",
+                label:     "Item",
+                options:   "Item",
+                reqd:      1,
+                filters:   { is_stock_item: 1, disabled: 0 },
+                onchange() {
+                    const item = d.get_value("item_code");
+                    if (!item) { d.set_value("current_qty", 0); return; }
+                    frappe.call({
+                        method:   "vortex_ops.setup.inventory_setup.get_bin_qty",
+                        args:     { warehouse, item_code: item },
+                        callback(r) {
+                            d.set_value("current_qty", r.message ? r.message.actual_qty : 0);
+                        },
+                    });
+                },
+            },
+            {
+                fieldname: "current_qty",
+                fieldtype: "Float",
+                label:     "Currently in Stock",
+                read_only: 1,
+            },
+            {
+                fieldname: "qty",
+                fieldtype: "Float",
+                label:     "Quantity to Remove",
+                reqd:      1,
+                default:   1,
+            },
+            {
+                fieldname:   "stream_event",
+                fieldtype:   "Link",
+                label:       "Stream (optional)",
+                options:     "Stream Event",
+                description: "Link to the stream this stock went out for — keeps your audit trail clean",
+            },
+            {
+                fieldname:   "reason",
+                fieldtype:   "Small Text",
+                label:       "Reason",
+                reqd:        1,
+                description: "e.g. 'Sold during stream', 'Damaged', 'Lost in fulfillment'",
+            },
+        ],
+        primary_action_label: "Remove from Stock",
+        primary_action(v) {
+            const remarks = v.stream_event
+                ? `${v.reason} [Stream: ${v.stream_event}]`
+                : v.reason;
+            frappe.call({
+                method:   "vortex_ops.setup.inventory_setup.adjust_stock",
+                args:     { warehouse, item_code: v.item_code, qty: v.qty,
+                            adjustment_type: "issue", reason: remarks },
+                callback(r) {
+                    if (!r.exc) {
+                        frappe.show_alert({ message: `Removed. Entry: ${r.message}`, indicator: "green" });
                         d.hide();
                         _load();
                     }

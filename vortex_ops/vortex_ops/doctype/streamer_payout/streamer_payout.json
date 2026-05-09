@@ -21,6 +21,7 @@
   "package_payout",
   "col_break2",
   "tips",
+  "include_tips",
   "deductions_section",
   "owner_platform_fee_pct",
   "owner_platform_fee_amount",
@@ -123,6 +124,14 @@
    "fieldname": "tips",
    "fieldtype": "Currency",
    "label": "Tips"
+  },
+  {
+   "fieldname": "include_tips",
+   "fieldtype": "Check",
+   "label": "Include Tips in Payout",
+   "default": "1",
+   "read_only": 1,
+   "description": "Auto-filled from Streamer settings"
   },
   {
    "fieldname": "deductions_section",
