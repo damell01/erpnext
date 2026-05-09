@@ -74,8 +74,7 @@
    "fieldtype": "Link",
    "label": "Assigned Warehouse",
    "options": "Warehouse",
-   "reqd": 1,
-   "description": "Inventory location for this streamer (e.g. Jordan Inventory - VB)"
+   "description": "Inventory location for this streamer. Use the 'Create Warehouse' button to auto-create."
   },
   {
    "fieldname": "status",
