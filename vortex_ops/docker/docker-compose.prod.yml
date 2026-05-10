@@ -1,0 +1,80 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Vortex Ops — Production Overrides
+#
+# Adds SSL (Let's Encrypt) and automated backups on top of docker-compose.yml.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# First run — get your SSL certificate:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+#     run --rm certbot certonly --webroot \
+#     --webroot-path=/var/www/certbot \
+#     --email admin@yourdomain.com \
+#     --agree-tos --no-eff-email \
+#     -d yourdomain.com
+#
+# Required extra vars in .env:
+#   DOMAIN          your public domain (e.g. app.vortexbreaks.com)
+#   CERTBOT_EMAIL   email for Let's Encrypt expiry notices
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Replace HTTP nginx with SSL-terminating nginx ───────────────────────────
+  frontend:
+    volumes:
+      - ./nginx-ssl.conf:/etc/nginx/templates/default.conf.template:ro
+      - sites:/home/frappe/frappe-bench/sites
+      - letsencrypt:/etc/letsencrypt:ro
+      - certbot-webroot:/var/www/certbot:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+      NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx/conf.d
+
+  # ── Certbot — obtains and renews Let's Encrypt certificates ────────────────
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot-webroot:/var/www/certbot
+    # Renew check every 12 hours; certbot only actually renews within 30 days of expiry
+    entrypoint: >
+      /bin/sh -c "trap exit TERM;
+      while :; do
+        certbot renew --webroot --webroot-path=/var/www/certbot --quiet;
+        sleep 12h & wait $${!};
+      done"
+    restart: unless-stopped
+
+  # ── Backup — runs daily at 2am ──────────────────────────────────────────────
+  backup:
+    image: vortex-ops:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - ./backup.sh:/backup.sh:ro
+    environment:
+      SITE_NAME: ${SITE_NAME}
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-}
+      BACKUP_S3_PREFIX: ${BACKUP_S3_PREFIX:-vortex-backups}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      AWS_ENDPOINT_URL: ${AWS_ENDPOINT_URL:-}
+    # Run bash /backup.sh daily at 2am using crond
+    command: >
+      /bin/sh -c "echo '0 2 * * * bash /backup.sh >> /proc/1/fd/1 2>&1' | crontab -
+      && crond -f -l 2"
+    restart: unless-stopped
+    depends_on:
+      - db
+
+volumes:
+  letsencrypt:
+  certbot-webroot:
