@@ -41,22 +41,14 @@ li:has(> a[href*="discuss.frappe"]) {
 
 /* ── Login page ────────────────────────────────────────────────────────────── */
 
-/* Replace the default login card header with a clean Vortex brand */
-.login-content .page-card-head::before {
-    content: "Vortex Ops";
-    display: block;
+/* Login card — brand name comes from System Settings (set by Vortex Settings).
+   Style the heading that the login page template renders. */
+.login-content .page-card-head h4,
+.login-content .page-card-head .app-name {
     font-size: 22px;
     font-weight: 700;
-    color: #E8630A;
+    color: var(--vortex-primary, #E8630A);
     margin-bottom: 6px;
-}
-
-/* Hide any "ERPNext" text nodes that get rendered on the login card */
-.page-card-head [class*="brand"],
-.page-card-head [class*="logo"] {
-    visibility: hidden;
-    height: 0;
-    overflow: hidden;
 }
 
 /* ── Module / workspace tiles — hide non-Vortex apps ─────────────────────── */
@@ -96,31 +88,44 @@ li:has(> a[href*="discuss.frappe"]) {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Vortex brand color accents
+   CSS variables are set at runtime by vortex_boot.js from Vortex Settings,
+   so changing the color in the UI takes effect on next login — no deploy.
+   Fallback values match the default orange in case boot.js hasn't run yet.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Primary accent — overrides ERPNext blue in key interactive elements */
+:root {
+    --vortex-primary:       #E8630A;
+    --vortex-primary-hover: #c95508;
+}
+
+/* Primary accent — overrides platform blue in key interactive elements */
 .btn-primary,
 .badge-primary,
 a.badge-primary {
-    background-color: #E8630A !important;
-    border-color: #E8630A !important;
+    background-color: var(--vortex-primary) !important;
+    border-color:     var(--vortex-primary) !important;
 }
 
 .btn-primary:hover,
 .btn-primary:focus {
-    background-color: #c95508 !important;
-    border-color: #c95508 !important;
+    background-color: var(--vortex-primary-hover) !important;
+    border-color:     var(--vortex-primary-hover) !important;
 }
 
 /* Sidebar active link highlight */
 .sidebar-item.selected,
 .sidebar-item.selected a {
-    color: #E8630A !important;
-    border-left-color: #E8630A !important;
+    color:            var(--vortex-primary) !important;
+    border-left-color: var(--vortex-primary) !important;
 }
 
 /* Form save / submit button accent */
 [data-doctype] .page-head .btn-primary {
-    background-color: #E8630A !important;
-    border-color: #E8630A !important;
+    background-color: var(--vortex-primary) !important;
+    border-color:     var(--vortex-primary) !important;
+}
+
+/* Login page brand name from Vortex Settings (rendered via boot) */
+.login-content .page-card-head::before {
+    color: var(--vortex-primary) !important;
 }
