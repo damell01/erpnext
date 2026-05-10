@@ -1,65 +1,95 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    Vortex Ops — Boot Script
-   Runs on every Frappe desk page load.  Scrubs ERPNext / Frappe branding
-   from the DOM and the browser tab title without touching server config.
+   Runs on every Frappe desk page load.  All brand values come from
+   frappe.boot (populated by boot_session → Vortex Settings) so changing
+   the brand name or color in the UI takes effect on next login — no deploy.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 (function () {
     "use strict";
 
-    const BRAND_STRINGS = [/ERPNext/gi, /Frappe/gi];
-    const APP_NAME      = "Vortex Ops";
+    /* ── Brand values from server (set in Vortex Settings) ─────────────────── */
+
+    function _boot(key, fallback) {
+        return (typeof frappe !== "undefined" && frappe.boot && frappe.boot[key]) || fallback;
+    }
+
+    const BRAND_NAME    = _boot("vortex_brand_name",    "VortexBreaks");
+    const PRIMARY_COLOR = _boot("vortex_primary_color", "#E8630A");
+
+    // Patterns to scrub — anything matching these gets replaced with BRAND_NAME
+    const SCRUB_PATTERNS = [/ERPNext/gi, /Frappe/gi];
+
+    /* ── Inject CSS custom properties ──────────────────────────────────────── */
+
+    function _injectColors() {
+        const hover = _darken(PRIMARY_COLOR, 15);
+        const style = document.createElement("style");
+        style.id = "vortex-brand-vars";
+        style.textContent =
+            ":root{" +
+            "--vortex-primary:" + PRIMARY_COLOR + ";" +
+            "--vortex-primary-hover:" + hover + ";" +
+            "}";
+        document.head.appendChild(style);
+    }
+
+    function _darken(hex, pct) {
+        hex = hex.replace("#", "");
+        if (hex.length === 3) { hex = hex.split("").map(c => c + c).join(""); }
+        const amt = Math.round(255 * pct / 100);
+        const r   = Math.max(0, parseInt(hex.slice(0, 2), 16) - amt);
+        const g   = Math.max(0, parseInt(hex.slice(2, 4), 16) - amt);
+        const b   = Math.max(0, parseInt(hex.slice(4, 6), 16) - amt);
+        return "#" + [r, g, b].map(function (v) { return v.toString(16).padStart(2, "0"); }).join("");
+    }
+
+    _injectColors();
 
     /* ── Title sanitiser ────────────────────────────────────────────────────── */
 
-    function sanitiseTitle() {
-        const raw = document.title;
-        let clean = raw;
-        BRAND_STRINGS.forEach(function (rx) { clean = clean.replace(rx, APP_NAME); });
+    function _sanitiseTitle() {
+        var raw   = document.title;
+        var clean = raw;
+        SCRUB_PATTERNS.forEach(function (rx) { clean = clean.replace(rx, BRAND_NAME); });
         if (clean !== raw) { document.title = clean; }
     }
 
-    // Watch for Frappe's router changing the title dynamically
-    const titleObserver = new MutationObserver(sanitiseTitle);
-    titleObserver.observe(document.querySelector("title") || document.documentElement, {
+    var titleEl = document.querySelector("title") || document.documentElement;
+    new MutationObserver(_sanitiseTitle).observe(titleEl, {
         subtree: true, childList: true, characterData: true,
     });
 
-    sanitiseTitle(); // run once immediately on load
+    _sanitiseTitle();
 
     /* ── DOM text node scrubber ─────────────────────────────────────────────── */
 
-    function scrubNode(node) {
+    function _scrubNode(node) {
         if (node.nodeType === Node.TEXT_NODE) {
-            let val = node.nodeValue;
-            let changed = false;
-            BRAND_STRINGS.forEach(function (rx) {
-                const next = val.replace(rx, APP_NAME);
+            var val = node.nodeValue;
+            var changed = false;
+            SCRUB_PATTERNS.forEach(function (rx) {
+                var next = val.replace(rx, BRAND_NAME);
                 if (next !== val) { val = next; changed = true; }
             });
             if (changed) { node.nodeValue = val; }
         } else if (node.nodeType === Node.ELEMENT_NODE) {
-            // skip script / style / input nodes — only visible text matters
             if (!["SCRIPT", "STYLE", "INPUT", "TEXTAREA"].includes(node.tagName)) {
-                node.childNodes.forEach(scrubNode);
+                node.childNodes.forEach(_scrubNode);
             }
         }
     }
 
-    // Scrub after Frappe renders each page
     $(document).on("page-change", function () {
-        requestAnimationFrame(function () { scrubNode(document.body); });
+        requestAnimationFrame(function () { _scrubNode(document.body); });
     });
 
-    // Also observe for dynamically injected text (modals, toasts, etc.)
-    const bodyObserver = new MutationObserver(function (mutations) {
-        mutations.forEach(function (m) {
-            m.addedNodes.forEach(scrubNode);
-        });
+    var bodyObserver = new MutationObserver(function (mutations) {
+        mutations.forEach(function (m) { m.addedNodes.forEach(_scrubNode); });
     });
 
     frappe.ready(function () {
-        scrubNode(document.body);
+        _scrubNode(document.body);
         bodyObserver.observe(document.body, { subtree: true, childList: true });
         _hideHelpLinks();
         _hideUpdateBanner();
@@ -68,19 +98,17 @@
     /* ── Help menu — remove links to erpnext.com / frappe.io ───────────────── */
 
     function _hideHelpLinks() {
-        const targets = [
+        var targets = [
             "erpnext.com", "frappe.io", "docs.erpnext",
             "discuss.frappe", "frappeframework",
         ];
-
-        // Frappe renders the help dropdown lazily; poll briefly for it
-        let attempts = 0;
-        const poll = setInterval(function () {
+        var attempts = 0;
+        var poll = setInterval(function () {
             if (++attempts > 20) { clearInterval(poll); return; }
             document.querySelectorAll(".help-links a, .navbar-help a").forEach(function (a) {
-                const href = (a.getAttribute("href") || "").toLowerCase();
+                var href = (a.getAttribute("href") || "").toLowerCase();
                 if (targets.some(function (t) { return href.includes(t); })) {
-                    const li = a.closest("li");
+                    var li = a.closest("li");
                     if (li) { li.remove(); } else { a.remove(); }
                 }
             });
@@ -90,9 +118,11 @@
     /* ── Update banner ──────────────────────────────────────────────────────── */
 
     function _hideUpdateBanner() {
-        [".update-banner", ".frappe-update-message", '[class*="update-banner"]'].forEach(function (sel) {
-            document.querySelectorAll(sel).forEach(function (el) { el.remove(); });
-        });
+        [".update-banner", ".frappe-update-message", '[class*="update-banner"]'].forEach(
+            function (sel) {
+                document.querySelectorAll(sel).forEach(function (el) { el.remove(); });
+            }
+        );
     }
 
 }());
