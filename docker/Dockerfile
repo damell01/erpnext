@@ -1,17 +1,17 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Vortex Ops — Custom ERPNext Image
 #
-# Extends the official frappe/erpnext image with the vortex_ops app
-# pre-installed as a Python package.  Site creation and bench install-app
-# happen at runtime via setup-site.sh (or your own orchestration).
+# Extends frappe/erpnext with:
+#   - vortex_ops app (installed as a Python package)
+#   - Playwright + Chromium (for Whatnot auto-scraper)
 #
 # Build:
 #   docker build -t vortex-ops:latest .
 #
-# Variables:
-#   ERPNEXT_VERSION   frappe/erpnext tag to build on (default: v15.latest)
-#   VORTEX_REPO       Git URL for the vortex_ops repo
-#   VORTEX_BRANCH     Branch to pull (default: main)
+# Build args:
+#   ERPNEXT_VERSION   frappe/erpnext tag  (default: v15)
+#   VORTEX_REPO       Git URL of the vortex_ops repo
+#   VORTEX_BRANCH     Branch to use       (default: main)
 # ─────────────────────────────────────────────────────────────────────────────
 
 ARG ERPNEXT_VERSION=v15
@@ -20,11 +20,18 @@ FROM frappe/erpnext:${ERPNEXT_VERSION}
 ARG VORTEX_REPO=https://github.com/damell01/erpnext.git
 ARG VORTEX_BRANCH=main
 
-# Install the vortex_ops Python package directly into the image.
-# No bench commands here — bench is per-site; pip installs app code globally.
 USER root
+
+# ── Install vortex_ops Python package ────────────────────────────────────────
 RUN pip install --no-cache-dir \
     "git+${VORTEX_REPO}@${VORTEX_BRANCH}#egg=vortex_ops"
 
-# Drop back to the frappe user for all runtime operations
+# ── Install Playwright + Chromium for Whatnot scraper ────────────────────────
+# --with-deps installs all required system libraries automatically.
+# This adds ~400 MB but makes the Whatnot auto-scrape work out of the box.
+RUN pip install --no-cache-dir playwright \
+ && playwright install chromium --with-deps \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+
 USER frappe
