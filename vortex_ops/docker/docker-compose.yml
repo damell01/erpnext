@@ -1,0 +1,118 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Vortex Ops — Full Stack
+#
+# Usage:
+#   cp .env.example .env          # fill in your values
+#   docker compose up -d          # start all services
+#   docker compose exec backend bash -c "cd /home/frappe/frappe-bench && bash /setup-site.sh"
+#
+# To rebuild after a vortex_ops code update:
+#   docker compose build backend && docker compose up -d
+# ─────────────────────────────────────────────────────────────────────────────
+
+x-depends-on-db: &depends-on-db
+  depends_on:
+    db:
+      condition: service_healthy
+
+x-depends-on-redis: &depends-on-redis
+  depends_on:
+    redis-cache:
+      condition: service_started
+    redis-queue:
+      condition: service_started
+
+# All frappe services share this base
+x-frappe-common: &frappe-common
+  image: vortex-ops:latest
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile
+    args:
+      ERPNEXT_VERSION: v15
+  environment:
+    DB_HOST: db
+    DB_PORT: "3306"
+    REDIS_CACHE: redis-cache:6379
+    REDIS_QUEUE: redis-queue:6379
+    SOCKETIO_PORT: "9000"
+  volumes:
+    - sites:/home/frappe/frappe-bench/sites
+  restart: unless-stopped
+  <<: [*depends-on-db, *depends-on-redis]
+
+services:
+
+  # ── Database ────────────────────────────────────────────────────────────────
+  db:
+    image: mariadb:10.6
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --skip-innodb-read-only-compressed
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--password=${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # ── Redis ───────────────────────────────────────────────────────────────────
+  redis-cache:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  redis-queue:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  # ── Frappe / ERPNext services ────────────────────────────────────────────────
+  backend:
+    <<: *frappe-common
+    command: gunicorn --chdir=/home/frappe/frappe-bench/sites --bind=0.0.0.0:8000 --timeout=120 --workers=2 frappe.app:application
+    expose:
+      - "8000"
+
+  queue-default:
+    <<: *frappe-common
+    command: bench worker --queue default
+
+  queue-short:
+    <<: *frappe-common
+    command: bench worker --queue short
+
+  queue-long:
+    <<: *frappe-common
+    command: bench worker --queue long
+
+  scheduler:
+    <<: *frappe-common
+    command: bench schedule
+
+  websocket:
+    <<: *frappe-common
+    command: node /home/frappe/frappe-bench/apps/frappe/socketio.js
+    expose:
+      - "9000"
+
+  # ── Nginx reverse proxy ─────────────────────────────────────────────────────
+  frontend:
+    image: nginx:alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - sites:/home/frappe/frappe-bench/sites
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    depends_on:
+      - backend
+      - websocket
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  sites:

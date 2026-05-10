@@ -1,0 +1,3 @@
+# Patches are applied in order during `bench migrate`.
+# Format: app.module.patch_file.execute
+# Example: vortex_ops.patches.v1_1.fix_loan_status.execute
