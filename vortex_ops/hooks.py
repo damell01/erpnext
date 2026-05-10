@@ -55,10 +55,12 @@ doc_events = {
 }
 
 fixtures = [
-    {"dt": "Role",         "filters": [["name", "like", "Vortex%"]]},
-    {"dt": "Workspace",    "filters": [["name", "like", "Vortex%"]]},
-    {"dt": "Print Format", "filters": [["module", "=", "Vortex Ops"]]},
-    {"dt": "Report",       "filters": [["module", "=", "Vortex Ops"]]},
-    {"dt": "Custom Field", "filters": [["dt", "=", "Warehouse"],
-                                       ["fieldname", "=", "is_vortex_managed"]]},
+    {"dt": "Role",           "filters": [["name", "like", "Vortex%"]]},
+    {"dt": "Workspace",      "filters": [["name", "like", "Vortex%"]]},
+    {"dt": "Print Format",   "filters": [["module", "=", "Vortex Ops"]]},
+    {"dt": "Report",         "filters": [["module", "=", "Vortex Ops"]]},
+    {"dt": "Custom Field",   "filters": [["dt", "=", "Warehouse"],
+                                         ["fieldname", "=", "is_vortex_managed"]]},
+    # Export brand config so deployments start with the right name/color
+    {"dt": "Vortex Settings"},
 ]
