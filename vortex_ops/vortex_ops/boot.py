@@ -1,5 +1,5 @@
 import frappe
-from vortex_ops.vortex_ops.vortex_ops.doctype.vortex_settings.vortex_settings import get_brand
+from vortex_ops.vortex_ops.doctype.vortex_settings.vortex_settings import get_brand
 
 
 def boot_session(bootinfo):
