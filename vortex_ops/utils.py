@@ -5,23 +5,35 @@ import requests as _req
 from frappe.utils import now
 
 logger = logging.getLogger(__name__)
-OLLAMA_URL    = "http://localhost:11434"
-DEFAULT_MODEL = "llama3.1:8b"
+_DEFAULT_URL   = "http://localhost:11434"
+_DEFAULT_MODEL = "llama3.1:8b"
 
 
-def _model():
-    return frappe.conf.get("ollama_model", DEFAULT_MODEL)
+def _ai_settings():
+    """Read AI config from Vortex Settings, fall back to defaults."""
+    try:
+        doc = frappe.get_cached_doc("Vortex Settings")
+        return {
+            "enabled": bool(doc.ai_enabled),
+            "url":     doc.ollama_url   or _DEFAULT_URL,
+            "model":   doc.ollama_model or _DEFAULT_MODEL,
+        }
+    except Exception:
+        return {"enabled": True, "url": _DEFAULT_URL, "model": _DEFAULT_MODEL}
 
 
 def ollama_chat(prompt, system="", model=None, max_tokens=1500):
-    model = model or _model()
+    cfg   = _ai_settings()
+    if not cfg["enabled"]:
+        frappe.throw("AI features are disabled. Enable them in Vortex Settings → AI Settings.")
+    model = model or cfg["model"]
     msgs  = []
     if system:
         msgs.append({"role": "system", "content": system})
     msgs.append({"role": "user", "content": prompt})
     try:
         r = _req.post(
-            f"{OLLAMA_URL}/api/chat",
+            f"{cfg['url']}/api/chat",
             json={
                 "model": model,
                 "messages": msgs,
@@ -33,7 +45,7 @@ def ollama_chat(prompt, system="", model=None, max_tokens=1500):
         r.raise_for_status()
         return r.json()["message"]["content"].strip()
     except _req.exceptions.ConnectionError:
-        frappe.throw("Ollama not running. SSH in: sudo systemctl start ollama")
+        frappe.throw(f"Ollama not reachable at {cfg['url']}. Check Vortex Settings → AI Settings or run: sudo systemctl start ollama")
     except _req.exceptions.Timeout:
         frappe.throw("Ollama timed out. Try again in 30 seconds.")
     except Exception as e:

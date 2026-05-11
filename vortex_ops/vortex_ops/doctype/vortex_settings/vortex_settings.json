@@ -11,7 +11,12 @@
   "primary_color",
   "login_tagline",
   "sb_email",
-  "email_footer_text"
+  "email_footer_text",
+  "sb_ai",
+  "ai_enabled",
+  "cb_ai",
+  "ollama_url",
+  "ollama_model"
  ],
  "fields": [
   {
@@ -54,6 +59,36 @@
    "fieldtype": "Small Text",
    "label": "Email Footer Text",
    "description": "Appears at the bottom of all system emails (password reset, notifications, etc.). Leave blank to use the brand name."
+  },
+  {
+   "fieldname": "sb_ai",
+   "fieldtype": "Section Break",
+   "label": "AI Settings (Ollama)"
+  },
+  {
+   "fieldname": "ai_enabled",
+   "fieldtype": "Check",
+   "label": "Enable AI Features",
+   "default": "1",
+   "description": "Enables anomaly detection, product matching, low-stock predictions, and stream summaries. Requires Ollama to be running."
+  },
+  {
+   "fieldname": "cb_ai",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ollama_url",
+   "fieldtype": "Data",
+   "label": "Ollama URL",
+   "default": "http://localhost:11434",
+   "description": "Ollama API base URL. Change only if Ollama runs on a remote host or non-default port."
+  },
+  {
+   "fieldname": "ollama_model",
+   "fieldtype": "Data",
+   "label": "Ollama Model",
+   "default": "llama3.1:8b",
+   "description": "Model name for all AI tasks. Run 'ollama pull &lt;model&gt;' on the server to download. Recommended: llama3.1:8b (8 GB RAM) or llama3.1:70b (32 GB RAM)."
   }
  ],
  "issingle": 1,

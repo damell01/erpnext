@@ -27,10 +27,25 @@ def _sync_to_system(doc):
     frappe.db.set_value("System Settings", "System Settings", updates)
 
 
+@frappe.whitelist()
+def test_ollama_connection():
+    """Called from the Vortex Settings form to verify Ollama is reachable."""
+    import requests as _req
+    doc = frappe.get_single("Vortex Settings")
+    url = doc.ollama_url or "http://localhost:11434"
+    try:
+        r = _req.get(f"{url}/api/tags", timeout=5)
+        r.raise_for_status()
+        models = [m["name"] for m in r.json().get("models", [])]
+        return {"ok": True, "models": models}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
 def get_brand():
     """
     Return the current brand dict.  Safe to call from boot / website_context
-    even before Vortex Settings has been saved — falls back to defaults.
+    even before Vortex Settings has been saved -- falls back to defaults.
     """
     try:
         doc = frappe.get_cached_doc("Vortex Settings")
