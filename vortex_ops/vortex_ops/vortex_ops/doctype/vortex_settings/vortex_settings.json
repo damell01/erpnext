@@ -1,0 +1,95 @@
+{
+ "actions": [],
+ "creation": "2025-05-10 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "brand_name",
+  "logo_url",
+  "cb1",
+  "primary_color",
+  "login_tagline",
+  "sb_email",
+  "email_footer_text"
+ ],
+ "fields": [
+  {
+   "fieldname": "brand_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Brand Name",
+   "reqd": 1,
+   "description": "Shown in the app header, emails, login page, and browser tab."
+  },
+  {
+   "fieldname": "logo_url",
+   "fieldtype": "Attach Image",
+   "label": "Brand Logo",
+   "description": "Upload your logo. Displayed in the navbar and login page."
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "primary_color",
+   "fieldtype": "Color",
+   "label": "Primary Color",
+   "description": "Accent color for buttons, active links, and highlights. Default: #E8630A"
+  },
+  {
+   "fieldname": "login_tagline",
+   "fieldtype": "Small Text",
+   "label": "Login Page Tagline",
+   "description": "Short text shown below the brand name on the login page."
+  },
+  {
+   "fieldname": "sb_email",
+   "fieldtype": "Section Break",
+   "label": "Email Settings"
+  },
+  {
+   "fieldname": "email_footer_text",
+   "fieldtype": "Small Text",
+   "label": "Email Footer Text",
+   "description": "Appears at the bottom of all system emails (password reset, notifications, etc.). Leave blank to use the brand name."
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-05-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Vortex Ops",
+ "name": "Vortex Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 0,
+   "print": 1,
+   "read": 1,
+   "report": 0,
+   "role": "Vortex Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 0,
+   "print": 1,
+   "read": 1,
+   "report": 0,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

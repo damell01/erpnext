@@ -1,0 +1,7 @@
+include vortex_ops/modules.txt
+include vortex_ops/patches.txt
+recursive-include vortex_ops *.json
+recursive-include vortex_ops *.js
+recursive-include vortex_ops *.css
+recursive-include vortex_ops *.html
+recursive-include vortex_ops *.txt
